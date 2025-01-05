@@ -1,5 +1,5 @@
 import CustomSwitch from "@/components/CustomSwitch";
-import HabitTracker from "@/components/HabitTracker";
+import HabitTracker from "@/components/HabitTable";
 
 const habits = [
   { name: 'Drink Water',       group: 'Health' },
