@@ -3,38 +3,36 @@
 import React from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 
-/**
- * Props for a single row of date cells (no left "habit name" column).
- */
 interface HabitRowProps {
-  /** The habit's unique name (not rendered here, you show it on the left panel). */
   habitName: string;
   displayedDates: Dayjs[];
-  computeStreak: (habitName: string, date: Dayjs) => number;
   completedStatus: { [habitName: string]: { [date: string]: boolean } };
   toggleCompletion: (habitName: string, date: Dayjs) => void;
+
+  /**
+   * 7 booleans: e.g. [true, false, true, ...]
+   * If false => day is "inactive", 
+   * but user can still click to complete. 
+   * If not completed & inactive => visually gray. 
+   * If completed & inactive => show streak color, count for streak.
+   */
+  recurrence?: boolean[];
 }
 
 /**
- * Simple color scale to indicate streak length (1–7 days).
+ * Let's use a red color scale for 1–7 day streaks
  */
 const colorScale = [
-  'bg-red-100', // 1-day streak
-  'bg-red-200', // 2-day streak
+  'bg-red-100',
+  'bg-red-200',
   'bg-red-300',
   'bg-red-400',
   'bg-red-500',
   'bg-red-600',
-  'bg-red-700', // 7+ days
+  'bg-red-700',
 ];
 
-/**
- * Returns the appropriate background color class for a given streak length.
- * 0 => 'bg-white'
- * 1 => 'bg-red-100'
- * ...
- * >=7 => 'bg-red-700'
- */
+/** Return color for a streak length (1..7). */
 function getStreakColor(streak: number): string {
   if (streak === 0) return 'bg-white';
   const index = Math.min(streak, colorScale.length) - 1;
@@ -44,54 +42,116 @@ function getStreakColor(streak: number): string {
 const CELL_WIDTH = "w-12";
 const CELL_HEIGHT = "h-12";
 
+/**
+ * A row of date cells for one habit. 
+ * Inactive day + not completed => bg-gray-500
+ * Inactive day + completed => streak color
+ * Active day + not completed => white (or yellow if today)
+ * Active day + completed => streak color
+ * 
+ * We implement custom streak logic that doesn't break if 
+ * an inactive day is not completed. But it does count an inactive 
+ * day if it is completed.
+ */
 const HabitRow: React.FC<HabitRowProps> = ({
   habitName,
   displayedDates,
-  computeStreak,
   completedStatus,
   toggleCompletion,
+  recurrence = [true, true, true, true, true, true, true],
 }) => {
+  
+  /**
+   * Move backward from `date`, building streak. 
+   * If day is active & completed => +1 
+   * If day is active & not completed => break 
+   * If day is inactive & completed => +1 
+   * If day is inactive & not completed => skip 
+   */
+  function computeCustomStreak(habitName: string, date: Dayjs): number {
+    let streak = 0;
+    let current = date.clone();
+
+    while (true) {
+      const dow = current.day();
+      const isActive = recurrence[dow];
+      const dateStr = current.format('YYYY-MM-DD');
+      const isCompleted = completedStatus[habitName]?.[dateStr] || false;
+
+      if (isActive && !isCompleted) {
+        // break the streak
+        break;
+      } else if (!isActive && !isCompleted) {
+        // skip, but do not break => just go to previous day
+        current = current.subtract(1, 'day');
+        continue;
+      } else {
+        // either active & completed, or inactive & completed => +1
+        streak++;
+        current = current.subtract(1, 'day');
+      }
+
+      // If we've gone too far in the past, optionally break
+      if (current.year() < 2020) break; 
+    }
+
+    return streak;
+  }
+
   return (
     <tr>
       {displayedDates.map((date) => {
         const dateKey = date.format('YYYY-MM-DD');
         const isCompleted = completedStatus[habitName]?.[dateKey] || false;
-        const streakLength = isCompleted ? computeStreak(habitName, date) : 0;
+        // We'll use our custom logic to compute the chain ignoring inactive uncompleted
+        const streakLength = isCompleted ? computeCustomStreak(habitName, date) : 0;
 
-        // If completed, use the streak color.
-        // If uncompleted and is today => 'bg-yellow-100'
-        // Otherwise => 'bg-white'
+        // If day is active, show normal color if not completed
+        // If day is inactive & not completed => gray 
+        // If day is inactive & completed => streak color
+        const dayOfWeek = date.day();
+        const isActive = recurrence[dayOfWeek];
+
+        let cellColor = 'bg-white';
         const isToday = date.isSame(dayjs().startOf('day'), 'day');
-        let cellColor = isCompleted
-          ? getStreakColor(streakLength)
-          : isToday
-            ? 'bg-yellow-100'
-            : 'bg-white';
+
+        if (isCompleted) {
+          // completed => streak color
+          cellColor = getStreakColor(streakLength);
+        } else {
+          // not completed
+          if (!isActive) {
+            cellColor = 'bg-gray-500'; 
+          } else if (isToday) {
+            cellColor = 'bg-yellow-100';
+          } else {
+            cellColor = 'bg-white';
+          }
+        }
 
         return (
           <td
             key={dateKey}
-            /**
-             * 1) Use onMouseDown instead of onClick.
-             * 2) e.preventDefault() stops focus / text-cursor.
-             * 3) contentEditable={false} + select-none => no text selection or cursor.
-             */
             onMouseDown={(e) => {
               e.preventDefault();
+              // user can still toggle, even if inactive
               toggleCompletion(habitName, date);
             }}
             contentEditable={false}
             className={[
-              'cursor-pointer',
-              'select-none',   // Disables text selection
+              'select-none',
               CELL_WIDTH,
               CELL_HEIGHT,
               'transition-colors',
+              'cursor-pointer',
               cellColor,
               // Hover effect
               isCompleted
                 ? 'hover:opacity-90'
-                : (isToday ? 'hover:bg-yellow-200' : 'hover:bg-gray-100'),
+                : (isActive
+                    ? (isToday ? 'hover:bg-yellow-200' : 'hover:bg-gray-100')
+                    : 'hover:opacity-80' // maybe a subtle darkening for inactive?
+                  ),
             ].join(' ')}
           />
         );

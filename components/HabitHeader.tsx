@@ -3,38 +3,47 @@
 import React, { useState } from "react";
 import { IoMdSettings } from "react-icons/io";
 
-// Define Props Type
 interface HabitHeaderProp {
-  habit: {
-    name: string;
-  };
+  habit: { name: string };
   cellHeight: string;
+
+  recurrence?: boolean[];
+  onRecurrenceChange?: (days: boolean[]) => void;
 }
 
-const HabitHeader: React.FC<HabitHeaderProp> = ({ habit, cellHeight }) => {
-  // State for modal visibility and input value
+const daysOfWeek = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+const HabitHeader: React.FC<HabitHeaderProp> = ({
+  habit,
+  cellHeight,
+  recurrence = [true,true,true,true,true,true,true],
+  onRecurrenceChange,
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [habitName, setHabitName] = useState(habit.name);
 
-  // Toggle modal visibility
+  // local copy of the recurrence array
+  const [localRecurrence, setLocalRecurrence] = useState<boolean[]>(recurrence);
+
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
 
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHabitName(e.target.value);
+  // Toggle a single day
+  const toggleDay = (index: number) => {
+    const updated = [...localRecurrence];
+    updated[index] = !updated[index];
+    setLocalRecurrence(updated);
   };
 
-  // Save changes (you can implement further logic here, e.g., API call)
+  // Save changes => parent
   const saveChanges = () => {
-    console.log("Habit updated:", habitName);
-    setIsModalOpen(false); // Close modal after saving
+    onRecurrenceChange?.(localRecurrence);
+    setIsModalOpen(false);
   };
 
   return (
     <>
-      {/* Habit Header */}
       <div
         className={[
           "group relative flex items-center justify-between",
@@ -50,35 +59,51 @@ const HabitHeader: React.FC<HabitHeaderProp> = ({ habit, cellHeight }) => {
       >
         {habitName}
 
-        {/* Settings Icon */}
         <IoMdSettings
-          className="hover:text-blue-500 ml-2 cursor-pointer text-gray-500 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+          className="ml-2 cursor-pointer text-gray-500 opacity-0 transition-opacity duration-150 hover:text-blue-500 group-hover:opacity-100"
           onClick={toggleModal}
         />
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-lg font-medium mb-4">Edit Habit</h2>
+          <div className="w-full max-w-md rounded bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-lg font-medium">Edit Habit</h2>
+
+            {/* Habit name */}
             <input
               type="text"
               value={habitName}
-              onChange={handleInputChange}
-              className="w-full p-2 mb-4 border rounded"
+              onChange={(e) => setHabitName(e.target.value)}
+              className="mb-4 w-full rounded border p-2"
               placeholder="Habit name"
             />
+
+            {/* 7 checkboxes for recurrence */}
+            <div className="grid grid-cols-7 gap-2 mb-4 text-center">
+              {daysOfWeek.map((day, idx) => (
+                <label key={day} className="cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    className="mr-1"
+                    checked={localRecurrence[idx]}
+                    onChange={() => toggleDay(idx)}
+                  />
+                  {day}
+                </label>
+              ))}
+            </div>
+
             <div className="flex justify-end space-x-2">
               <button
                 onClick={toggleModal}
-                className="px-4 py-2 text-sm text-gray-500 bg-gray-100 rounded hover:bg-gray-200"
+                className="rounded bg-gray-100 px-4 py-2 text-sm text-gray-500 hover:bg-gray-200"
               >
                 Cancel
               </button>
               <button
                 onClick={saveChanges}
-                className="px-4 py-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
+                className="rounded bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
               >
                 Save
               </button>

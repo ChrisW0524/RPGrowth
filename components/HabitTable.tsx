@@ -3,12 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import HabitRow from "./HabitRow";
-import {
-  IoIosArrowBack,
-  IoIosArrowForward,
-  IoMdSettings,
-} from "react-icons/io";
 import HabitHeader from "./HabitHeader";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 /** A single habit with a name and a group. */
 interface Habit {
@@ -21,32 +17,57 @@ interface HabitTableProps {
 }
 
 /**
- * We'll keep COLUMN_WIDTH = 48 for exact 48px columns.
+ * We'll keep COLUMN_WIDTH = 48 for ~48px columns.
  */
 const COLUMN_WIDTH = 48;
 
-/**
- * We define classes or inline styles to enforce exactly 48x48 cells.
+/** 
+ * Classes for ~48px cells in Tailwind.
  */
-const CELL_WIDTH = "w-12"; // ~48px
-const CELL_HEIGHT = "h-12"; // ~48px
+const CELL_WIDTH = "w-12";
+const CELL_HEIGHT = "h-12";
 
 const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
+  /**
+   * completedStatus[habitName][YYYY-MM-DD] => boolean
+   * e.g. completedStatus["Drink Water"]["2024-01-01"] = true
+   */
   const [completedStatus, setCompletedStatus] = useState<{
     [habitName: string]: { [dateStr: string]: boolean };
   }>({});
 
-  // The leftmost date in the table
+  /**
+   * recurrenceSettings[habitName] => boolean[] for [Sun..Sat].
+   * e.g. recurrence["Drink Water"] = [true,true,true,true,true,true,true]
+   */
+  const [recurrenceSettings, setRecurrenceSettings] = useState<{
+    [habitName: string]: boolean[];
+  }>({});
+
+  /** The leftmost date in the table. */
   const [startDate, setStartDate] = useState(dayjs().startOf("day"));
 
-  // Number of columns to show
+  /** How many columns to show (responsive). */
   const [daysToShow, setDaysToShow] = useState(7);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   /**
-   * Measure container width and figure out how many columns
-   * we can fit at 48px each.
+   * Ensure each new habit has default recurrence (all days = true).
+   */
+  useEffect(() => {
+    habits.forEach((h) => {
+      if (!recurrenceSettings[h.name]) {
+        setRecurrenceSettings((prev) => ({
+          ...prev,
+          [h.name]: [true, true, true, true, true, true, true], // default
+        }));
+      }
+    });
+  }, [habits, recurrenceSettings]);
+
+  /**
+   * Determine how many columns fit at ~48px each.
    */
   const updateDaysToShow = useCallback(() => {
     if (containerRef.current) {
@@ -64,11 +85,16 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
     };
   }, [updateDaysToShow]);
 
-  /** Array of Dayjs objects for each column */
+  /**
+   * Array of Dayjs objects for each displayed column.
+   */
   const displayedDates = Array.from({ length: daysToShow }, (_, i) =>
     startDate.add(i, "day"),
   );
 
+  /**
+   * Toggle completion for a habit on a specific date.
+   */
   function toggleCompletion(habitName: string, date: Dayjs) {
     setCompletedStatus((prev) => {
       const dateStr = date.format("YYYY-MM-DD");
@@ -84,6 +110,9 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
     });
   }
 
+  /**
+   * Move left or right by daysToShow days.
+   */
   function handlePrevious() {
     setStartDate((prev) => prev.subtract(daysToShow, "day"));
   }
@@ -91,16 +120,9 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
     setStartDate((prev) => prev.add(daysToShow, "day"));
   }
 
-  function computeStreak(habitName: string, date: Dayjs): number {
-    let streak = 0;
-    let current = date.clone();
-    while (completedStatus[habitName]?.[current.format("YYYY-MM-DD")]) {
-      streak += 1;
-      current = current.subtract(1, "day");
-    }
-    return streak;
-  }
-
+  /**
+   * Group the habits by group so we can render them in sections.
+   */
   const allGroups = Array.from(new Set(habits.map((h) => h.group)));
   const groupedHabits = allGroups.map((groupName) => ({
     group: groupName,
@@ -134,23 +156,21 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
       <div className="flex">
         {/* LEFT PANEL */}
         <div className="flex-shrink-0">
-          {/* Top Left Corner (optional) */}
-          <div
-            className={`flex flex-row-reverse items-center bg-white pr-2 ${CELL_HEIGHT}`}
-          >
+          {/* Top Left Corner: optional arrows */}
+          <div className={`flex flex-row-reverse items-center bg-white pr-2 ${CELL_HEIGHT}`}>
             <IoIosArrowForward
               className="h-6 w-6 cursor-pointer text-gray-800 transition-colors hover:text-blue-500"
               onClick={handleNext}
-            ></IoIosArrowForward>
+            />
             <IoIosArrowBack
               className="h-6 w-6 cursor-pointer text-gray-800 transition-colors hover:text-blue-500"
               onClick={handlePrevious}
-            ></IoIosArrowBack>
+            />
           </div>
 
+          {/* Render group headings + habit headers */}
           {groupedHabits.map(({ group, habits: groupHabits }) => (
             <div key={group}>
-              {/* Group heading on the left panel */}
               <div
                 className={[
                   "flex items-center font-bold uppercase",
@@ -158,20 +178,30 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
                 ].join(" ")}
                 style={{
                   minWidth: "48px",
-                  maxWidth: "400px", // can be bigger for group text
+                  maxWidth: "400px",
                   minHeight: "48px",
                   maxHeight: "48px",
-                  padding: "0 8px", // example: 8px horizontal
+                  padding: "0 8px",
                 }}
               >
                 {group}
               </div>
-              {/* Habit names */}
               {groupHabits.map((habit) => (
                 <HabitHeader
                   key={habit.name}
                   habit={habit}
                   cellHeight={CELL_HEIGHT}
+                  // Pass array if we have it
+                  recurrence={
+                    recurrenceSettings[habit.name] ?? [true,true,true,true,true,true,true]
+                  }
+                  // If user changes day-of-week checkboxes, store in state
+                  onRecurrenceChange={(days) => {
+                    setRecurrenceSettings((prev) => ({
+                      ...prev,
+                      [habit.name]: days,
+                    }));
+                  }}
                 />
               ))}
             </div>
@@ -183,8 +213,8 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
           <table
             className="w-full table-fixed border-collapse border"
             style={{
-              borderSpacing: 0, // remove any default spacing
-              tableLayout: "fixed", // ensures columns don't auto-resize
+              borderSpacing: 0,
+              tableLayout: "fixed",
             }}
           >
             <thead>
@@ -198,7 +228,6 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
                       CELL_HEIGHT,
                       "box-border border-b border-gray-300 text-center text-xs",
                     ].join(" ")}
-                    // Fix weird half-pixel bug
                     style={{
                       minWidth: "48px",
                       maxWidth: "48px",
@@ -215,13 +244,13 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
             <tbody>
               {groupedHabits.map(({ group, habits: groupHabits }) => (
                 <React.Fragment key={group}>
-                  {/* Disabled group row on the RIGHT */}
+                  {/* Group heading row on the right side */}
                   <tr className="pointer-events-none">
                     <td
                       colSpan={displayedDates.length}
                       className={`box-border bg-gray-200 text-left uppercase ${CELL_HEIGHT}`}
                     >
-                      {/* {group} */}
+                      {/* Could repeat group name if desired */}
                     </td>
                   </tr>
 
@@ -230,9 +259,12 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits }) => {
                       key={habit.name}
                       habitName={habit.name}
                       displayedDates={displayedDates}
-                      computeStreak={computeStreak}
                       completedStatus={completedStatus}
                       toggleCompletion={toggleCompletion}
+                      // Pass the same recurrence array
+                      recurrence={
+                        recurrenceSettings[habit.name] ?? [true,true,true,true,true,true,true]
+                      }
                     />
                   ))}
                 </React.Fragment>
