@@ -1,56 +1,51 @@
-import React from 'react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import clsx from 'clsx';
-import { Button } from '../Button';
-import { UniqueIdentifier } from '@dnd-kit/core';
+import React from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import clsx from "clsx";
+import { UniqueIdentifier } from "@dnd-kit/core";
 
 interface ContainerProps {
   id: UniqueIdentifier;
-  children: React.ReactNode;
   title?: string;
-  description?: string;
+  children: React.ReactNode;
   onAddItem?: () => void;
 }
 
-const KanbanContainer = ({
+export default function KanbanContainer({
   id,
-  children,
   title,
-  description,
+  children,
   onAddItem,
-}: ContainerProps) => {
+}: ContainerProps) {
   const {
     attributes,
-    setNodeRef,
     listeners,
+    setNodeRef,
     transform,
     transition,
     isDragging,
   } = useSortable({
-    id: id,
+    id,
     data: {
-      type: 'container',
+      type: "container",
     },
   });
+
   return (
     <div
-      {...attributes}
       ref={setNodeRef}
+      {...attributes}
       style={{
         transition,
         transform: CSS.Translate.toString(transform),
       }}
       className={clsx(
-        'w-full h-full p-4 bg-gray-50 rounded-xl flex flex-col gap-y-4',
-        isDragging && 'opacity-50',
+        "w-full h-full p-4 bg-gray-50 rounded-xl flex flex-col gap-y-4",
+        isDragging && "opacity-50",
       )}
     >
       <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-y-1">
-          <h1 className="text-gray-800 text-xl">{title}</h1>
-          <p className="text-gray-400 text-sm">{description}</p>
-        </div>
+        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
         <button
           className="border p-2 text-xs rounded-xl shadow-lg hover:shadow-xl"
           {...listeners}
@@ -59,12 +54,14 @@ const KanbanContainer = ({
         </button>
       </div>
 
-      {children}
-      <Button variant="ghost" onClick={onAddItem}>
-        Add Item
-      </Button>
+      <div className="flex-1 flex flex-col gap-y-4">{children}</div>
+
+      <button
+        className="text-blue-600 hover:underline text-sm"
+        onClick={onAddItem}
+      >
+        + Add Item
+      </button>
     </div>
   );
-};
-
-export default KanbanContainer;
+}

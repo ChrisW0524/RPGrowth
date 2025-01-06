@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaAngleRight } from "react-icons/fa"; // Import the arrow icon
+import { FaAngleRight } from "react-icons/fa";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
@@ -8,23 +8,14 @@ import { UniqueIdentifier } from "@dnd-kit/core";
 
 interface ContainerProps {
   id: UniqueIdentifier;
+  title: string;
   children: React.ReactNode;
-  title?: string;
-  description?: string;
   onAddItem?: () => void;
 }
 
-const ListContainer = ({
-  id,
-  children,
-  title,
-  description,
-  onAddItem,
-}: ContainerProps) => {
-  // Accordion toggle state
+export default function ListContainer({ id, title, children, onAddItem }: ContainerProps) {
+  // Accordion toggle
   const [isOpen, setIsOpen] = useState(true);
-
-  // Ref to calculate height for animation
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState("auto");
 
@@ -32,7 +23,7 @@ const ListContainer = ({
     if (contentRef.current) {
       setContentHeight(isOpen ? `${contentRef.current.scrollHeight}px` : "0px");
     }
-  }, [isOpen, children]); // Recalculate on toggle or when children change
+  }, [isOpen, children]);
 
   const {
     attributes,
@@ -42,62 +33,48 @@ const ListContainer = ({
     transition,
     isDragging,
   } = useSortable({
-    id: id,
-    data: {
-      type: "container",
-    },
+    id,
+    data: { type: "container" },
   });
 
   return (
     <div
-      {...attributes}
       ref={setNodeRef}
+      {...attributes}
       style={{
         transition,
         transform: CSS.Translate.toString(transform),
       }}
-      className={clsx(
-        "flex h-full w-full flex-col gap-y-4 rounded-xl ",
-        isDragging && "opacity-50",
-      )}
+      className={clsx("flex w-full flex-col gap-y-4 rounded-xl", isDragging && "opacity-50")}
     >
-      {/* Header Section */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {/* Arrow Icon for Expand/Collapse */}
-            <button
-              onClick={() => setIsOpen((prev) => !prev)}
-              className="p-1  transition-colors duration-300 hover:bg-gray-100 rounded-md"
-            >
-              <FaAngleRight
-                className={clsx(
-                  "text-gray-800 transition-transform duration-300", // Smooth rotation transition
-                  isOpen && "rotate-90" // Rotate 90 degrees counterclockwise when open
-                )}
-              />
-            </button>
-
-            {/* Title and Description */}
-            <div className="flex flex-col gap-y-1">
-              <h1 className="font-bold text-gray-800">{title}</h1>
-              <p className="text-sm text-gray-400">{description}</p>
-            </div>
-          </div>
-
-          {/* Drag Handle */}
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {/* Toggle Button */}
           <button
-            className="rounded-xl border p-2 text-xs shadow-lg hover:shadow-xl"
-            {...listeners}
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-1 transition-colors duration-300 hover:bg-gray-100 rounded-md"
           >
-            Drag Handle
+            <FaAngleRight
+              className={clsx(
+                "text-gray-800 transition-transform duration-300",
+                isOpen && "rotate-90"
+              )}
+            />
           </button>
+          {/* Title */}
+          <h2 className="font-bold text-gray-800 text-lg">{title}</h2>
         </div>
 
-        <div className="w-full border-b-2 border-gray-300"></div>
+        {/* Drag Handle */}
+        <button className="border p-2 text-xs rounded-xl shadow-lg hover:shadow-xl" {...listeners}>
+          Drag Handle
+        </button>
       </div>
 
-      {/* Collapsible Content with Animation */}
+      <div className="w-full border-b-2 border-gray-300" />
+
+      {/* Collapsible Content */}
       <div
         ref={contentRef}
         style={{
@@ -109,12 +86,10 @@ const ListContainer = ({
         <div className="flex flex-col gap-y-4 pt-4">
           {children}
           <Button variant="ghost" onClick={onAddItem}>
-            Add Item
+            + Add Item
           </Button>
         </div>
       </div>
     </div>
   );
-};
-
-export default ListContainer;
+}

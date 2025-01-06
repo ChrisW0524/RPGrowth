@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import dayjs from "dayjs";
 
-// DnD
+// dnd-kit
 import {
   DndContext,
   DragEndEvent,
@@ -25,413 +26,322 @@ import {
 
 import { Inter } from "next/font/google";
 
+// Types
+import { TaskContainerType, TaskType } from "@/types";
+
 // Components
 import Container from "@/components/Kanban/KanbanContainer";
-import Items from "@/components/Kanban/KanbanItem";
+import Item from "@/components/Kanban/KanbanItem";
 import Modal from "../Modal";
 import Input from "../Input";
 import { Button } from "../Button";
+
 const inter = Inter({ subsets: ["latin"] });
 
-type DNDType = {
-  id: UniqueIdentifier;
-  title: string;
-  items: {
-    id: UniqueIdentifier;
-    title: string;
-  }[];
-};
-
-type Props = {
-  containers: DNDType[];
-  setContainers: React.Dispatch<React.SetStateAction<DNDType[]>>;
-};
+interface Props {
+  containers: TaskContainerType[];
+  setContainers: React.Dispatch<React.SetStateAction<TaskContainerType[]>>;
+}
 
 export default function KanbanBoard({ containers, setContainers }: Props) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  const [currentContainerId, setCurrentContainerId] =
-    useState<UniqueIdentifier>();
-  const [containerName, setContainerName] = useState("");
-  const [itemName, setItemName] = useState("");
-  const [showAddContainerModal, setShowAddContainerModal] = useState(false);
-  const [showAddItemModal, setShowAddItemModal] = useState(false);
 
+  // -- Manage modals & input states for adding container/task
+  const [showAddContainerModal, setShowAddContainerModal] = useState(false);
+  const [containerName, setContainerName] = useState("");
+
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [currentContainerId, setCurrentContainerId] = useState<UniqueIdentifier>();
+
+  // Fields for a new task
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
+  const [taskPriority, setTaskPriority] = useState<"High" | "Medium" | "Low">("Medium");
+  const [taskStatus, setTaskStatus] = useState<"To Do" | "In Progress" | "Completed">("To Do");
+  const [taskExp, setTaskExp] = useState<number>(0);
+  const [taskGold, setTaskGold] = useState<number>(0);
+  const [taskDueDate, setTaskDueDate] = useState<string>(""); // will convert to dayjs
+
+  // -- Add a new container
   const onAddContainer = () => {
-    if (!containerName) return;
-    const id = `container-${uuidv4()}`;
-    setContainers([
-      ...containers,
-      {
-        id,
-        title: containerName,
-        items: [],
-      },
-    ]);
+    if (!containerName.trim()) return;
+    const newContainer: TaskContainerType = {
+      id: `container-${uuidv4()}`,
+      title: containerName,
+      items: [], // starts empty
+    };
+    setContainers([...containers, newContainer]);
     setContainerName("");
     setShowAddContainerModal(false);
   };
 
+  // -- Add a new item
   const onAddItem = () => {
-    if (!itemName) return;
-    const id = `item-${uuidv4()}`;
-    const container = containers.find((item) => item.id === currentContainerId);
-    if (!container) return;
-    container.items.push({
-      id,
-      title: itemName,
-    });
-    setContainers([...containers]);
-    setItemName("");
+    if (!taskTitle.trim() || !currentContainerId) return;
+
+    // find container
+    const containerIndex = containers.findIndex((c) => c.id === currentContainerId);
+    if (containerIndex === -1) return;
+
+    const newTask: TaskType = {
+      id: `item-${uuidv4()}`,
+      title: taskTitle,
+      description: taskDescription,
+      tags: [], // you can store this from user input if you want
+      priority: taskPriority,
+      status: taskStatus,
+      createdDate: dayjs(),
+      dueDate: taskDueDate ? dayjs(taskDueDate) : undefined,
+      exp: taskExp,
+      gold: taskGold,
+    };
+
+    const updatedContainers = [...containers];
+    updatedContainers[containerIndex].items.push(newTask);
+    setContainers(updatedContainers);
+
+    // reset fields
+    setTaskTitle("");
+    setTaskDescription("");
+    setTaskPriority("Medium");
+    setTaskStatus("To Do");
+    setTaskExp(0);
+    setTaskGold(0);
+    setTaskDueDate("");
     setShowAddItemModal(false);
   };
 
-  // Find the value of the items
-  function findValueOfItems(id: UniqueIdentifier | undefined, type: string) {
-    if (type === "container") {
-      return containers.find((item) => item.id === id);
-    }
-    if (type === "item") {
-      return containers.find((container) =>
-        container.items.find((item) => item.id === id),
-      );
-    }
-  }
+  // Utility to find container or item by id
+  const findContainer = (id: UniqueIdentifier) =>
+    containers.find((c) => c.id === id);
+  const findItemContainer = (itemId: UniqueIdentifier) =>
+    containers.find((c) => c.items.find((i) => i.id === itemId));
 
-  const findItemTitle = (id: UniqueIdentifier | undefined) => {
-    const container = findValueOfItems(id, "item");
-    if (!container) return "";
-    const item = container.items.find((item) => item.id === id);
-    if (!item) return "";
-    return item.title;
-  };
-
-  const findContainerTitle = (id: UniqueIdentifier | undefined) => {
-    const container = findValueOfItems(id, "container");
-    if (!container) return "";
-    return container.title;
-  };
-
-  const findContainerItems = (id: UniqueIdentifier | undefined) => {
-    const container = findValueOfItems(id, "container");
-    if (!container) return [];
-    return container.items;
-  };
-
-  // DND Handlers
+  // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    })
   );
 
+  // DnD Handlers
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
-    const { id } = active;
-    setActiveId(id);
+    setActiveId(active.id);
   }
 
-  const handleDragMove = (event: DragMoveEvent) => {
+  function handleDragMove(event: DragMoveEvent) {
     const { active, over } = event;
+    if (!over) return;
+    // If you're doing real-time reordering in "onDragMove", you can do it here.
+    // Otherwise, you can do it in handleDragEnd alone.
+  }
 
-    // Handle Items Sorting
-    if (
-      active.id.toString().includes("item") &&
-      over?.id.toString().includes("item") &&
-      active &&
-      over &&
-      active.id !== over.id
-    ) {
-      // Find the active container and over container
-      const activeContainer = findValueOfItems(active.id, "item");
-      const overContainer = findValueOfItems(over.id, "item");
-
-      // If the active or over container is not found, return
-      if (!activeContainer || !overContainer) return;
-
-      // Find the index of the active and over container
-      const activeContainerIndex = containers.findIndex(
-        (container) => container.id === activeContainer.id,
-      );
-      const overContainerIndex = containers.findIndex(
-        (container) => container.id === overContainer.id,
-      );
-
-      // Find the index of the active and over item
-      const activeitemIndex = activeContainer.items.findIndex(
-        (item) => item.id === active.id,
-      );
-      const overitemIndex = overContainer.items.findIndex(
-        (item) => item.id === over.id,
-      );
-      // In the same container
-      if (activeContainerIndex === overContainerIndex) {
-        let newItems = [...containers];
-        newItems[activeContainerIndex].items = arrayMove(
-          newItems[activeContainerIndex].items,
-          activeitemIndex,
-          overitemIndex,
-        );
-
-        setContainers(newItems);
-      } else {
-        // In different containers
-        let newItems = [...containers];
-        const [removeditem] = newItems[activeContainerIndex].items.splice(
-          activeitemIndex,
-          1,
-        );
-        newItems[overContainerIndex].items.splice(
-          overitemIndex,
-          0,
-          removeditem,
-        );
-        setContainers(newItems);
-      }
-    }
-
-    // Handling Item Drop Into a Container
-    if (
-      active.id.toString().includes("item") &&
-      over?.id.toString().includes("container") &&
-      active &&
-      over &&
-      active.id !== over.id
-    ) {
-      // Find the active and over container
-      const activeContainer = findValueOfItems(active.id, "item");
-      const overContainer = findValueOfItems(over.id, "container");
-
-      // If the active or over container is not found, return
-      if (!activeContainer || !overContainer) return;
-
-      // Find the index of the active and over container
-      const activeContainerIndex = containers.findIndex(
-        (container) => container.id === activeContainer.id,
-      );
-      const overContainerIndex = containers.findIndex(
-        (container) => container.id === overContainer.id,
-      );
-
-      // Find the index of the active and over item
-      const activeitemIndex = activeContainer.items.findIndex(
-        (item) => item.id === active.id,
-      );
-
-      // Remove the active item from the active container and add it to the over container
-      let newItems = [...containers];
-      const [removeditem] = newItems[activeContainerIndex].items.splice(
-        activeitemIndex,
-        1,
-      );
-      newItems[overContainerIndex].items.push(removeditem);
-      setContainers(newItems);
-    }
-  };
-
-  // This is the function that handles the sorting of the containers and items when the user is done dragging.
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-
-    // Handling Container Sorting
-    if (
-      active.id.toString().includes("container") &&
-      over?.id.toString().includes("container") &&
-      active &&
-      over &&
-      active.id !== over.id
-    ) {
-      // Find the index of the active and over container
-      const activeContainerIndex = containers.findIndex(
-        (container) => container.id === active.id,
-      );
-      const overContainerIndex = containers.findIndex(
-        (container) => container.id === over.id,
-      );
-      // Swap the active and over container
-      let newItems = [...containers];
-      newItems = arrayMove(newItems, activeContainerIndex, overContainerIndex);
-      setContainers(newItems);
+    if (!over || active.id === over.id) {
+      setActiveId(null);
+      return;
     }
 
-    // Handling item Sorting
-    if (
-      active.id.toString().includes("item") &&
-      over?.id.toString().includes("item") &&
-      active &&
-      over &&
-      active.id !== over.id
-    ) {
-      // Find the active and over container
-      const activeContainer = findValueOfItems(active.id, "item");
-      const overContainer = findValueOfItems(over.id, "item");
+    // Container -> Container reordering
+    if (String(active.id).includes("container") && String(over.id).includes("container")) {
+      const oldIndex = containers.findIndex((c) => c.id === active.id);
+      const newIndex = containers.findIndex((c) => c.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return;
 
-      // If the active or over container is not found, return
-      if (!activeContainer || !overContainer) return;
-      // Find the index of the active and over container
-      const activeContainerIndex = containers.findIndex(
-        (container) => container.id === activeContainer.id,
-      );
-      const overContainerIndex = containers.findIndex(
-        (container) => container.id === overContainer.id,
-      );
-      // Find the index of the active and over item
-      const activeitemIndex = activeContainer.items.findIndex(
-        (item) => item.id === active.id,
-      );
-      const overitemIndex = overContainer.items.findIndex(
-        (item) => item.id === over.id,
-      );
+      const newContainers = arrayMove(containers, oldIndex, newIndex);
+      setContainers(newContainers);
+    }
 
-      // In the same container
-      if (activeContainerIndex === overContainerIndex) {
-        let newItems = [...containers];
-        newItems[activeContainerIndex].items = arrayMove(
-          newItems[activeContainerIndex].items,
-          activeitemIndex,
-          overitemIndex,
-        );
-        setContainers(newItems);
+    // Item -> Item or Item -> Container reordering
+    if (String(active.id).includes("item")) {
+      const fromContainer = findItemContainer(active.id);
+      const toContainer = String(over.id).includes("item")
+        ? findItemContainer(over.id)
+        : findContainer(over.id);
+
+      if (!fromContainer || !toContainer) return;
+
+      const fromContainerIndex = containers.findIndex((c) => c.id === fromContainer.id);
+      const toContainerIndex = containers.findIndex((c) => c.id === toContainer.id);
+
+      const activeTaskIndex = fromContainer.items.findIndex((i) => i.id === active.id);
+
+      // If over is an item, we need that index:
+      let overIndex = 0;
+      if (String(over.id).includes("item")) {
+        overIndex = toContainer.items.findIndex((i) => i.id === over.id);
       } else {
-        // In different containers
-        let newItems = [...containers];
-        const [removeditem] = newItems[activeContainerIndex].items.splice(
-          activeitemIndex,
-          1,
-        );
-        newItems[overContainerIndex].items.splice(
-          overitemIndex,
-          0,
-          removeditem,
-        );
-        setContainers(newItems);
+        // If over is container, push to the end
+        overIndex = toContainer.items.length;
       }
-    }
-    // Handling item dropping into Container
-    if (
-      active.id.toString().includes("item") &&
-      over?.id.toString().includes("container") &&
-      active &&
-      over &&
-      active.id !== over.id
-    ) {
-      // Find the active and over container
-      const activeContainer = findValueOfItems(active.id, "item");
-      const overContainer = findValueOfItems(over.id, "container");
 
-      // If the active or over container is not found, return
-      if (!activeContainer || !overContainer) return;
-      // Find the index of the active and over container
-      const activeContainerIndex = containers.findIndex(
-        (container) => container.id === activeContainer.id,
-      );
-      const overContainerIndex = containers.findIndex(
-        (container) => container.id === overContainer.id,
-      );
-      // Find the index of the active and over item
-      const activeitemIndex = activeContainer.items.findIndex(
-        (item) => item.id === active.id,
-      );
+      // 1) Remove from old container
+      const updated = [...containers];
+      const [movedTask] = updated[fromContainerIndex].items.splice(activeTaskIndex, 1);
 
-      let newItems = [...containers];
-      const [removeditem] = newItems[activeContainerIndex].items.splice(
-        activeitemIndex,
-        1,
-      );
-      newItems[overContainerIndex].items.push(removeditem);
-      setContainers(newItems);
+      // 2) Insert into new container
+      updated[toContainerIndex].items.splice(overIndex, 0, movedTask);
+
+      setContainers(updated);
     }
+
     setActiveId(null);
   }
 
   return (
     <div className="flex-1 p-8">
       {/* Add Container Modal */}
-      <Modal
-        showModal={showAddContainerModal}
-        setShowModal={setShowAddContainerModal}
-      >
+      <Modal showModal={showAddContainerModal} setShowModal={setShowAddContainerModal}>
         <div className="flex w-full flex-col items-start gap-y-4">
           <h1 className="text-3xl font-bold text-gray-800">Add Container</h1>
           <Input
             type="text"
             placeholder="Container Title"
-            name="containername"
+            name="containerName"
             value={containerName}
             onChange={(e) => setContainerName(e.target.value)}
           />
-          <Button onClick={onAddContainer}>Add container</Button>
+          <Button onClick={onAddContainer}>Add Container</Button>
         </div>
       </Modal>
-      {/* Add Item Modal */}
-      <Modal
-        showModal={showAddItemModal}
-        setShowModal={setShowAddItemModal}
-      >
+
+      {/* Add Task (Item) Modal */}
+      <Modal showModal={showAddItemModal} setShowModal={setShowAddItemModal}>
         <div className="flex w-full flex-col items-start gap-y-4">
-          <h1 className="text-3xl font-bold text-gray-800">Add Item</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Add Task</h1>
           <Input
             type="text"
-            placeholder="Item Title"
-            name="itemname"
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
+            placeholder="Task Title"
+            name="taskTitle"
+            value={taskTitle}
+            onChange={(e) => setTaskTitle(e.target.value)}
           />
+          <Input
+            type="text"
+            placeholder="Description"
+            name="taskDescription"
+            value={taskDescription}
+            onChange={(e) => setTaskDescription(e.target.value)}
+          />
+          <Input
+            type="date"
+            placeholder="Due Date"
+            name="taskDueDate"
+            value={taskDueDate}
+            onChange={(e) => setTaskDueDate(e.target.value)}
+          />
+          <Input
+            type="number"
+            placeholder="EXP"
+            name="taskExp"
+            value={String(taskExp)}
+            onChange={(e) => setTaskExp(Number(e.target.value))}
+          />
+          <Input
+            type="number"
+            placeholder="Gold"
+            name="taskGold"
+            value={String(taskGold)}
+            onChange={(e) => setTaskGold(Number(e.target.value))}
+          />
+          {/* Priority & Status (basic selects) */}
+          <select
+            value={taskPriority}
+            onChange={(e) => setTaskPriority(e.target.value as "High" | "Medium" | "Low")}
+            className="w-full rounded-lg border p-2 shadow-lg hover:shadow-xl"
+          >
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <select
+            value={taskStatus}
+            onChange={(e) =>
+              setTaskStatus(e.target.value as "To Do" | "In Progress" | "Completed")
+            }
+            className="w-full rounded-lg border p-2 shadow-lg hover:shadow-xl"
+          >
+            <option value="To Do">To Do</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
           <Button onClick={onAddItem}>Add Item</Button>
         </div>
       </Modal>
+
+      {/* Page Header */}
       <div className="flex items-center justify-between gap-y-2">
-        <h1 className="text-3xl font-bold text-gray-800">Dnd-kit Guide</h1>
-        <Button onClick={() => setShowAddContainerModal(true)}>
-          Add Container
-        </Button>
+        <h1 className="text-3xl font-bold text-gray-800">Kanban Board</h1>
+        <Button onClick={() => setShowAddContainerModal(true)}>Add Container</Button>
       </div>
+
+      {/* Render Containers */}
       <div className="mt-10">
-        <div className="grid grid-cols-3 gap-6">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragMove={handleDragMove}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext items={containers.map((i) => i.id)}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={containers.map((c) => c.id)}>
+            <div className="grid grid-cols-3 gap-6">
               {containers.map((container) => (
                 <Container
+                  key={container.id}
                   id={container.id}
                   title={container.title}
-                  key={container.id}
                   onAddItem={() => {
-                    setShowAddItemModal(true);
                     setCurrentContainerId(container.id);
+                    setShowAddItemModal(true);
                   }}
                 >
-                  <SortableContext items={container.items.map((i) => i.id)}>
+                  <SortableContext items={container.items.map((task) => task.id)}>
                     <div className="flex flex-col items-start gap-y-4">
-                      {container.items.map((i) => (
-                        <Items title={i.title} id={i.id} key={i.id} />
+                      {container.items.map((task) => (
+                        <Item
+                          key={task.id}
+                          {...task} // spread all TaskType fields
+                        />
                       ))}
                     </div>
                   </SortableContext>
                 </Container>
               ))}
-            </SortableContext>
-            <DragOverlay adjustScale={false}>
-              {/* Drag Overlay For item Item */}
-              {activeId && activeId.toString().includes("item") && (
-                <Items id={activeId} title={findItemTitle(activeId)} />
-              )}
-              {/* Drag Overlay For Container */}
-              {activeId && activeId.toString().includes("container") && (
-                <Container id={activeId} title={findContainerTitle(activeId)}>
-                  {findContainerItems(activeId).map((i) => (
-                    <Items key={i.id} title={i.title} id={i.id} />
-                  ))}
-                </Container>
-              )}
-            </DragOverlay>
-          </DndContext>
-        </div>
+            </div>
+          </SortableContext>
+
+          {/* Drag Overlay */}
+          <DragOverlay adjustScale={false}>
+            {activeId && String(activeId).includes("item") && (
+              // We need to find the actual Task object
+              (() => {
+                const c = findItemContainer(activeId);
+                if (!c) return null;
+                const t = c.items.find((task) => task.id === activeId);
+                if (!t) return null;
+                return <Item {...t} />;
+              })()
+            )}
+            {activeId && String(activeId).includes("container") && (
+              // We need to find the actual Container object
+              (() => {
+                const c = findContainer(activeId);
+                if (!c) return null;
+                return (
+                  <Container id={c.id} title={c.title}>
+                    {c.items.map((task) => (
+                      <Item key={task.id} {...task} />
+                    ))}
+                  </Container>
+                );
+              })()
+            )}
+          </DragOverlay>
+        </DndContext>
       </div>
     </div>
   );
