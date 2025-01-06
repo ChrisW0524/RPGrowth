@@ -8,7 +8,7 @@ interface InputProps {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const Input = ({ name, value, placeholder, onChange }: InputProps) => {
+const KanbanInput = ({ name, value, placeholder, onChange }: InputProps) => {
   return (
     <input
       name={name}
@@ -20,4 +20,4 @@ const Input = ({ name, value, placeholder, onChange }: InputProps) => {
   );
 };
 
-export default Input;
+export default KanbanInput;

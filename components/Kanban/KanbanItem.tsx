@@ -3,13 +3,9 @@ import { useSortable } from '@dnd-kit/sortable';
 import React from 'react';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
+import { KanbanItemType } from '@/types';
 
-type ItemsType = {
-  id: UniqueIdentifier;
-  title: string;
-};
-
-const Items = ({ id, title }: ItemsType) => {
+const kanbanItem = ({ id, title }: KanbanItemType) => {
   const {
     attributes,
     listeners,
@@ -49,4 +45,4 @@ const Items = ({ id, title }: ItemsType) => {
   );
 };
 
-export default Items;
+export default kanbanItem;
