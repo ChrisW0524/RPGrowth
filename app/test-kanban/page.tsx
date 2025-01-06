@@ -1,7 +1,7 @@
 import KanbanBoard from "@/components/Kanban/KanbanBoard";
 import Sidebar, { SidebarItem } from "@/components/Sidebar";
 import { Settings, Bell, User } from "lucide-react"; // Import necessary icons
-
+import ListBoard from "@/components/List/ListBoard";
 
 export default function Home() {
   return (
@@ -12,7 +12,7 @@ export default function Home() {
         <SidebarItem icon={<User size={20} />} text="Profile"/>
         <SidebarItem icon={<Settings size={20} />} text="Settings" />
       </Sidebar>
-      <KanbanBoard></KanbanBoard>
+      <ListBoard></ListBoard>
     </div>
   );
 }
