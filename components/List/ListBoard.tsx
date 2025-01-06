@@ -26,12 +26,11 @@ import {
 import { Inter } from "next/font/google";
 
 // Components
-import Container from "@/components/Kanban/KanbanContainer";
-import Items from "@/components/Kanban/KanbanItem";
-import KanbanModal from "@/components/Kanban/KanbanModal";
-import Input from "@/components/Kanban/KanbanInput";
-import { KanbanButton } from "@/components/Kanban/KanbanButton";
-
+import ListContainer from "./ListContainer";
+import ListItem from "./ListItem";
+import ListModal from "./ListModal";
+import ListInput from "./ListInput";
+import { ListButton } from "./ListButton";
 const inter = Inter({ subsets: ["latin"] });
 
 type DNDType = {
@@ -43,8 +42,12 @@ type DNDType = {
   }[];
 }
 
-export default function KanbanBoard() {
-  const [containers, setContainers] = useState<DNDType[]>([]);
+type Props = {
+  containers: DNDType[];
+  setContainers: React.Dispatch<React.SetStateAction<DNDType[]>>;
+};
+
+export default function ListBoard({ containers, setContainers }: Props) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [currentContainerId, setCurrentContainerId] =
     useState<UniqueIdentifier>();
@@ -344,47 +347,47 @@ export default function KanbanBoard() {
   return (
     <div className="flex-1 p-8">
       {/* Add Container Modal */}
-      <KanbanModal
+      <ListModal
         showModal={showAddContainerModal}
         setShowModal={setShowAddContainerModal}
       >
         <div className="flex w-full flex-col items-start gap-y-4">
           <h1 className="text-3xl font-bold text-gray-800">Add Container</h1>
-          <Input
+          <ListInput
             type="text"
             placeholder="Container Title"
             name="containername"
             value={containerName}
             onChange={(e) => setContainerName(e.target.value)}
           />
-          <KanbanButton onClick={onAddContainer}>Add container</KanbanButton>
+          <ListButton onClick={onAddContainer}>Add container</ListButton>
         </div>
-      </KanbanModal>
+      </ListModal>
       {/* Add Item Modal */}
-      <KanbanModal
+      <ListModal
         showModal={showAddItemModal}
         setShowModal={setShowAddItemModal}
       >
         <div className="flex w-full flex-col items-start gap-y-4">
           <h1 className="text-3xl font-bold text-gray-800">Add Item</h1>
-          <Input
+          <ListInput
             type="text"
             placeholder="Item Title"
             name="itemname"
             value={itemName}
             onChange={(e) => setItemName(e.target.value)}
           />
-          <KanbanButton onClick={onAddItem}>Add Item</KanbanButton>
+          <ListButton onClick={onAddItem}>Add Item</ListButton>
         </div>
-      </KanbanModal>
+      </ListModal>
       <div className="flex items-center justify-between gap-y-2">
         <h1 className="text-3xl font-bold text-gray-800">Dnd-kit Guide</h1>
-        <KanbanButton onClick={() => setShowAddContainerModal(true)}>
+        <ListButton onClick={() => setShowAddContainerModal(true)}>
           Add Container
-        </KanbanButton>
+        </ListButton>
       </div>
       <div className="mt-10">
-        <div className="grid grid-cols-3 gap-6">
+        <div className="flex flex-col gap-6">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
@@ -394,7 +397,7 @@ export default function KanbanBoard() {
           >
             <SortableContext items={containers.map((i) => i.id)}>
               {containers.map((container) => (
-                <Container
+                <ListContainer
                   id={container.id}
                   title={container.title}
                   key={container.id}
@@ -406,25 +409,25 @@ export default function KanbanBoard() {
                   <SortableContext items={container.items.map((i) => i.id)}>
                     <div className="flex flex-col items-start gap-y-4">
                       {container.items.map((i) => (
-                        <Items title={i.title} id={i.id} key={i.id} />
+                        <ListItem title={i.title} id={i.id} key={i.id} />
                       ))}
                     </div>
                   </SortableContext>
-                </Container>
+                </ListContainer>
               ))}
             </SortableContext>
             <DragOverlay adjustScale={false}>
               {/* Drag Overlay For item Item */}
               {activeId && activeId.toString().includes("item") && (
-                <Items id={activeId} title={findItemTitle(activeId)} />
+                <ListItem id={activeId} title={findItemTitle(activeId)} />
               )}
               {/* Drag Overlay For Container */}
               {activeId && activeId.toString().includes("container") && (
-                <Container id={activeId} title={findContainerTitle(activeId)}>
+                <ListContainer id={activeId} title={findContainerTitle(activeId)}>
                   {findContainerItems(activeId).map((i) => (
-                    <Items key={i.id} title={i.title} id={i.id} />
+                    <ListItem key={i.id} title={i.title} id={i.id} />
                   ))}
-                </Container>
+                </ListContainer>
               )}
             </DragOverlay>
           </DndContext>

@@ -41,10 +41,14 @@ type DNDType = {
     id: UniqueIdentifier;
     title: string;
   }[];
-}
+};
 
-export default function KanbanBoard() {
-  const [containers, setContainers] = useState<DNDType[]>([]);
+type Props = {
+  containers: DNDType[];
+  setContainers: React.Dispatch<React.SetStateAction<DNDType[]>>;
+};
+
+export default function KanbanBoard({ containers, setContainers }: Props) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [currentContainerId, setCurrentContainerId] =
     useState<UniqueIdentifier>();
