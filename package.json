@@ -10,12 +10,20 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "class-variance-authority": "^0.7.1",
     "dayjs": "^1.11.13",
+    "dnd-kit": "^0.0.2",
+    "focus-trap-react": "^11.0.2",
+    "framer-motion": "^11.15.0",
     "next": "14.2.13",
     "react": "^18",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18",
-    "react-icons": "^5.4.0"
+    "react-icons": "^5.4.0",
+    "uuid": "^11.0.4"
   },
   "devDependencies": {
     "@radix-ui/react-switch": "^1.1.0",
