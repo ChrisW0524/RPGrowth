@@ -3,8 +3,7 @@ import { FaAngleRight } from "react-icons/fa"; // Import the arrow icon
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
-import { ListButton } from "./ListButton";
-
+import { Button } from "../Button";
 import { UniqueIdentifier } from "@dnd-kit/core";
 
 interface ContainerProps {
@@ -58,7 +57,7 @@ const ListContainer = ({
         transform: CSS.Translate.toString(transform),
       }}
       className={clsx(
-        "flex h-full w-full flex-col gap-y-4 rounded-xl p-4",
+        "flex h-full w-full flex-col gap-y-4 rounded-xl ",
         isDragging && "opacity-50",
       )}
     >
@@ -109,9 +108,9 @@ const ListContainer = ({
       >
         <div className="flex flex-col gap-y-4 pt-4">
           {children}
-          <ListButton variant="ghost" onClick={onAddItem}>
+          <Button variant="ghost" onClick={onAddItem}>
             Add Item
-          </ListButton>
+          </Button>
         </div>
       </div>
     </div>

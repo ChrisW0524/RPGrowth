@@ -18,14 +18,14 @@ type DNDType = {
 
 export default function Home() {
   // State for toggling views
-  const [view, setView] = useState<"board" | "list">("board");
+  const [isKanbanView, setIsKanbanView] = useState<boolean>(false);
 
   // Shared state for containers
   const [containers, setContainers] = useState<DNDType[]>([]);
 
   // Toggle View Handler
   const toggleView = () => {
-    setView((prevView) => (prevView === "board" ? "list" : "board"));
+    setIsKanbanView(!isKanbanView)
   };
 
   return (
@@ -43,12 +43,12 @@ export default function Home() {
             onClick={toggleView}
             className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
           >
-            {view === "board" ? "Switch to List View" : "Switch to Board View"}
+            {isKanbanView ? "Switch to List View" : "Switch to Board View"}
           </button>
         </div>
 
         {/* Render View Based on State */}
-        {view === "board" ? (
+        {isKanbanView ? (
           <KanbanBoard containers={containers} setContainers={setContainers} />
         ) : (
           <ListBoard containers={containers} setContainers={setContainers} />

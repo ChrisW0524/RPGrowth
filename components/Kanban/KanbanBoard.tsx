@@ -28,10 +28,9 @@ import { Inter } from "next/font/google";
 // Components
 import Container from "@/components/Kanban/KanbanContainer";
 import Items from "@/components/Kanban/KanbanItem";
-import KanbanModal from "@/components/Kanban/KanbanModal";
-import Input from "@/components/Kanban/KanbanInput";
-import { KanbanButton } from "@/components/Kanban/KanbanButton";
-
+import Modal from "../Modal";
+import Input from "../Input";
+import { Button } from "../Button";
 const inter = Inter({ subsets: ["latin"] });
 
 type DNDType = {
@@ -348,7 +347,7 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
   return (
     <div className="flex-1 p-8">
       {/* Add Container Modal */}
-      <KanbanModal
+      <Modal
         showModal={showAddContainerModal}
         setShowModal={setShowAddContainerModal}
       >
@@ -361,11 +360,11 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
             value={containerName}
             onChange={(e) => setContainerName(e.target.value)}
           />
-          <KanbanButton onClick={onAddContainer}>Add container</KanbanButton>
+          <Button onClick={onAddContainer}>Add container</Button>
         </div>
-      </KanbanModal>
+      </Modal>
       {/* Add Item Modal */}
-      <KanbanModal
+      <Modal
         showModal={showAddItemModal}
         setShowModal={setShowAddItemModal}
       >
@@ -378,14 +377,14 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
             value={itemName}
             onChange={(e) => setItemName(e.target.value)}
           />
-          <KanbanButton onClick={onAddItem}>Add Item</KanbanButton>
+          <Button onClick={onAddItem}>Add Item</Button>
         </div>
-      </KanbanModal>
+      </Modal>
       <div className="flex items-center justify-between gap-y-2">
         <h1 className="text-3xl font-bold text-gray-800">Dnd-kit Guide</h1>
-        <KanbanButton onClick={() => setShowAddContainerModal(true)}>
+        <Button onClick={() => setShowAddContainerModal(true)}>
           Add Container
-        </KanbanButton>
+        </Button>
       </div>
       <div className="mt-10">
         <div className="grid grid-cols-3 gap-6">

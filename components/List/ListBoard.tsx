@@ -28,9 +28,9 @@ import { Inter } from "next/font/google";
 // Components
 import ListContainer from "./ListContainer";
 import ListItem from "./ListItem";
-import ListModal from "./ListModal";
-import ListInput from "./ListInput";
-import { ListButton } from "./ListButton";
+import Modal from "../Modal";
+import Input from "../Input";
+import { Button } from "../Button";
 const inter = Inter({ subsets: ["latin"] });
 
 type DNDType = {
@@ -347,44 +347,44 @@ export default function ListBoard({ containers, setContainers }: Props) {
   return (
     <div className="flex-1 p-8">
       {/* Add Container Modal */}
-      <ListModal
+      <Modal
         showModal={showAddContainerModal}
         setShowModal={setShowAddContainerModal}
       >
         <div className="flex w-full flex-col items-start gap-y-4">
           <h1 className="text-3xl font-bold text-gray-800">Add Container</h1>
-          <ListInput
+          <Input
             type="text"
             placeholder="Container Title"
             name="containername"
             value={containerName}
             onChange={(e) => setContainerName(e.target.value)}
           />
-          <ListButton onClick={onAddContainer}>Add container</ListButton>
+          <Button onClick={onAddContainer}>Add container</Button>
         </div>
-      </ListModal>
+      </Modal>
       {/* Add Item Modal */}
-      <ListModal
+      <Modal
         showModal={showAddItemModal}
         setShowModal={setShowAddItemModal}
       >
         <div className="flex w-full flex-col items-start gap-y-4">
           <h1 className="text-3xl font-bold text-gray-800">Add Item</h1>
-          <ListInput
+          <Input
             type="text"
             placeholder="Item Title"
             name="itemname"
             value={itemName}
             onChange={(e) => setItemName(e.target.value)}
           />
-          <ListButton onClick={onAddItem}>Add Item</ListButton>
+          <Button onClick={onAddItem}>Add Item</Button>
         </div>
-      </ListModal>
+      </Modal>
       <div className="flex items-center justify-between gap-y-2">
         <h1 className="text-3xl font-bold text-gray-800">Dnd-kit Guide</h1>
-        <ListButton onClick={() => setShowAddContainerModal(true)}>
+        <Button onClick={() => setShowAddContainerModal(true)}>
           Add Container
-        </ListButton>
+        </Button>
       </div>
       <div className="mt-10">
         <div className="flex flex-col gap-6">

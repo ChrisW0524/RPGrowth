@@ -2,8 +2,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { KanbanButton } from './KanbanButton';
-
+import { Button } from '../Button';
 import { UniqueIdentifier } from '@dnd-kit/core';
 
 interface ContainerProps {
@@ -61,9 +60,9 @@ const KanbanContainer = ({
       </div>
 
       {children}
-      <KanbanButton variant="ghost" onClick={onAddItem}>
+      <Button variant="ghost" onClick={onAddItem}>
         Add Item
-      </KanbanButton>
+      </Button>
     </div>
   );
 };

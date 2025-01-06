@@ -14,7 +14,7 @@ interface ModalProps {
   containerClasses?: string;
 }
 
-export default function KanbanModal({
+export default function Modal({
   children,
   showModal,
   setShowModal,
