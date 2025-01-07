@@ -27,10 +27,12 @@ import { Inter } from "next/font/google";
 
 // Components
 import Container from "@/components/Kanban/KanbanContainer";
-import Items from "@/components/Kanban/KanbanItem";
+import KanbanItem from "@/components/Kanban/KanbanItem";
 import Modal from "../Modal";
 import Input from "../Input";
 import { Button } from "../Button";
+import { TaskType } from "@/types";
+import dayjs from "dayjs";
 const inter = Inter({ subsets: ["latin"] });
 
 type DNDType = {
@@ -56,13 +58,22 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
   const [showAddContainerModal, setShowAddContainerModal] = useState(false);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
 
+
+   // Fields for a new task
+   const [taskTitle, setTaskTitle] = useState("");
+   const [taskDescription, setTaskDescription] = useState("");
+   const [taskPriority, setTaskPriority] = useState<"High" | "Medium" | "Low">("Medium");
+   const [taskStatus, setTaskStatus] = useState<"To Do" | "In Progress" | "Completed">("To Do");
+   const [taskExp, setTaskExp] = useState<number>(0);
+   const [taskGold, setTaskGold] = useState<number>(0);
+   const [taskDueDate, setTaskDueDate] = useState<string>(""); // will convert to dayjs
+
   const onAddContainer = () => {
     if (!containerName) return;
-    const id = `container-${uuidv4()}`;
     setContainers([
       ...containers,
       {
-        id,
+        id: `container-${uuidv4()}`,
         title: containerName,
         items: [],
       },
@@ -71,19 +82,41 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
     setShowAddContainerModal(false);
   };
 
-  const onAddItem = () => {
-    if (!itemName) return;
-    const id = `item-${uuidv4()}`;
-    const container = containers.find((item) => item.id === currentContainerId);
-    if (!container) return;
-    container.items.push({
-      id,
-      title: itemName,
-    });
-    setContainers([...containers]);
-    setItemName("");
-    setShowAddItemModal(false);
-  };
+    // -- Add a new item
+    const onAddItem = () => {
+      if (!taskTitle.trim() || !currentContainerId) return;
+  
+      // find container
+      const containerIndex = containers.findIndex((c) => c.id === currentContainerId);
+      if (containerIndex === -1) return;
+  
+      const newTask: TaskType = {
+        id: `item-${uuidv4()}`,
+        title: taskTitle,
+        description: taskDescription,
+        tags: [], // you can store this from user input if you want
+        priority: taskPriority,
+        status: taskStatus,
+        createdDate: dayjs(),
+        dueDate: taskDueDate ? dayjs(taskDueDate) : undefined,
+        exp: taskExp,
+        gold: taskGold,
+      };
+  
+      const updatedContainers = [...containers];
+      updatedContainers[containerIndex].items.push(newTask);
+      setContainers(updatedContainers);
+  
+      // reset fields
+      setTaskTitle("");
+      setTaskDescription("");
+      setTaskPriority("Medium");
+      setTaskStatus("To Do");
+      setTaskExp(0);
+      setTaskGold(0);
+      setTaskDueDate("");
+      setShowAddItemModal(false);
+    };
 
   // Find the value of the items
   function findValueOfItems(id: UniqueIdentifier | undefined, type: string) {
@@ -97,12 +130,12 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
     }
   }
 
-  const findItemTitle = (id: UniqueIdentifier | undefined) => {
+  const findItem = (id: UniqueIdentifier | undefined) => {
     const container = findValueOfItems(id, "item");
     if (!container) return "";
     const item = container.items.find((item) => item.id === id);
     if (!item) return "";
-    return item.title;
+    return item;
   };
 
   const findContainerTitle = (id: UniqueIdentifier | undefined) => {
@@ -364,19 +397,65 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
         </div>
       </Modal>
       {/* Add Item Modal */}
-      <Modal
-        showModal={showAddItemModal}
-        setShowModal={setShowAddItemModal}
-      >
+      <Modal showModal={showAddItemModal} setShowModal={setShowAddItemModal}>
         <div className="flex w-full flex-col items-start gap-y-4">
-          <h1 className="text-3xl font-bold text-gray-800">Add Item</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Add Task</h1>
           <Input
             type="text"
-            placeholder="Item Title"
-            name="itemname"
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
+            placeholder="Task Title"
+            name="taskTitle"
+            value={taskTitle}
+            onChange={(e) => setTaskTitle(e.target.value)}
           />
+          <Input
+            type="text"
+            placeholder="Description"
+            name="taskDescription"
+            value={taskDescription}
+            onChange={(e) => setTaskDescription(e.target.value)}
+          />
+          <Input
+            type="date"
+            placeholder="Due Date"
+            name="taskDueDate"
+            value={taskDueDate}
+            onChange={(e) => setTaskDueDate(e.target.value)}
+          />
+          <Input
+            type="number"
+            placeholder="EXP"
+            name="taskExp"
+            value={String(taskExp)}
+            onChange={(e) => setTaskExp(Number(e.target.value))}
+          />
+          <Input
+            type="number"
+            placeholder="Gold"
+            name="taskGold"
+            value={String(taskGold)}
+            onChange={(e) => setTaskGold(Number(e.target.value))}
+          />
+          {/* Priority & Status (basic selects) */}
+          <select
+            value={taskPriority}
+            onChange={(e) => setTaskPriority(e.target.value as "High" | "Medium" | "Low")}
+            className="w-full rounded-lg border p-2 shadow-lg hover:shadow-xl"
+          >
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <select
+            value={taskStatus}
+            onChange={(e) =>
+              setTaskStatus(e.target.value as "To Do" | "In Progress" | "Completed")
+            }
+            className="w-full rounded-lg border p-2 shadow-lg hover:shadow-xl"
+          >
+            <option value="To Do">To Do</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
           <Button onClick={onAddItem}>Add Item</Button>
         </div>
       </Modal>
@@ -409,7 +488,7 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
                   <SortableContext items={container.items.map((i) => i.id)}>
                     <div className="flex flex-col items-start gap-y-4">
                       {container.items.map((i) => (
-                        <Items title={i.title} id={i.id} key={i.id} />
+                        <KanbanItem {...i} key={i.id} />
                       ))}
                     </div>
                   </SortableContext>
@@ -419,13 +498,13 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
             <DragOverlay adjustScale={false}>
               {/* Drag Overlay For item Item */}
               {activeId && activeId.toString().includes("item") && (
-                <Items id={activeId} title={findItemTitle(activeId)} />
+                <KanbanItem id={activeId} {...findItem(activeId)} />
               )}
               {/* Drag Overlay For Container */}
               {activeId && activeId.toString().includes("container") && (
                 <Container id={activeId} title={findContainerTitle(activeId)}>
                   {findContainerItems(activeId).map((i) => (
-                    <Items key={i.id} title={i.title} id={i.id} />
+                    <KanbanItem {...i} key={i.id} />
                   ))}
                 </Container>
               )}

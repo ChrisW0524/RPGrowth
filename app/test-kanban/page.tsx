@@ -6,22 +6,14 @@ import KanbanBoard from "@/components/Kanban/KanbanBoard";
 import ListBoard from "@/components/List/ListBoard";
 import Sidebar, { SidebarItem } from "@/components/Sidebar";
 
-// Define the type for containers
-type DNDType = {
-  id: string;
-  title: string;
-  items: {
-    id: string;
-    title: string;
-  }[];
-};
+import { TaskType, ContainerType } from "@/types";
 
 export default function Home() {
   // State for toggling views
   const [isKanbanView, setIsKanbanView] = useState<boolean>(false);
 
   // Shared state for containers
-  const [containers, setContainers] = useState<DNDType[]>([]);
+  const [containers, setContainers] = useState<ContainerType[]>([]);
 
   // Toggle View Handler
   const toggleView = () => {
