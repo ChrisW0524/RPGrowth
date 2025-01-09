@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FaAngleRight } from "react-icons/fa"; // Import the arrow icon
+import React, { useState } from "react";
+import { FaAngleRight } from "react-icons/fa";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
@@ -14,50 +14,32 @@ interface ContainerProps {
   onAddItem?: () => void;
 }
 
-const ListContainer = ({
+export default function ListContainer({
   id,
   children,
   title,
   description,
   onAddItem,
-}: ContainerProps) => {
-  // Accordion toggle state
+}: ContainerProps) {
+  // Accordion toggle
   const [isOpen, setIsOpen] = useState(true);
 
-  // Ref to calculate height for animation
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = useState("auto");
-
-  useEffect(() => {
-    if (contentRef.current) {
-      setContentHeight(isOpen ? `${contentRef.current.scrollHeight}px` : "0px");
-    }
-  }, [isOpen, children]); // Recalculate on toggle or when children change
-
-  const {
-    attributes,
-    setNodeRef,
-    listeners,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: id,
-    data: {
-      type: "container",
-    },
-  });
+  const { attributes, setNodeRef, listeners, transform, transition, isDragging } =
+    useSortable({
+      id: id,
+      data: { type: "container" },
+    });
 
   return (
     <div
-      {...attributes}
       ref={setNodeRef}
+      {...attributes}
       style={{
         transition,
         transform: CSS.Translate.toString(transform),
       }}
       className={clsx(
-        "flex h-full w-full flex-col gap-y-4 rounded-xl ",
+        "flex h-full w-full flex-col gap-y-4 rounded-xl",
         isDragging && "opacity-50",
       )}
     >
@@ -68,12 +50,12 @@ const ListContainer = ({
             {/* Arrow Icon for Expand/Collapse */}
             <button
               onClick={() => setIsOpen((prev) => !prev)}
-              className="p-1  transition-colors duration-300 hover:bg-gray-100 rounded-md"
+              className="rounded-md p-1 transition-colors duration-300 hover:bg-gray-100"
             >
               <FaAngleRight
                 className={clsx(
-                  "text-gray-800 transition-transform duration-300", // Smooth rotation transition
-                  isOpen && "rotate-90" // Rotate 90 degrees counterclockwise when open
+                  "text-gray-800 transition-transform duration-300", 
+                  isOpen && "rotate-90" // rotate arrow when open
                 )}
               />
             </button>
@@ -94,27 +76,24 @@ const ListContainer = ({
           </button>
         </div>
 
-        <div className="w-full border-b-2 border-gray-300"></div>
+        <div className="w-full border-b-2 border-gray-300" />
       </div>
 
-      {/* Collapsible Content with Animation */}
+      {/* Collapsible Content */}
       <div
-        ref={contentRef}
-        style={{
-          height: contentHeight,
-          overflow: "hidden",
-          transition: "height 0.3s ease-in-out",
-        }}
+        className={clsx(
+          // Basic container styles
+          "flex flex-col gap-y-4 pt-4 overflow-hidden transition-all duration-300",
+          // When isOpen, set a large max height
+          // When closed, max height is 0
+          isOpen ? "max-h-[1000px]" : "max-h-0",
+        )}
       >
-        <div className="flex flex-col gap-y-4 pt-4">
-          {children}
-          <Button variant="ghost" onClick={onAddItem}>
-            Add Item
-          </Button>
-        </div>
+        {children}
+        <Button variant="ghost" onClick={onAddItem}>
+          Add Item
+        </Button>
       </div>
     </div>
   );
-};
-
-export default ListContainer;
+}

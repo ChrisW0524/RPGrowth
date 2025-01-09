@@ -28,17 +28,17 @@ import { Inter } from "next/font/google";
 // Components
 import KanbanContainer from "@/components/Kanban/KanbanContainer";
 import KanbanItem from "@/components/Kanban/KanbanItem";
-import Modal from "../Modal";
-import Input from "../Input";
-import { Button } from "../Button";
+import Modal from "./Modal"; 
+import Input from "./Input";
+import { Button } from "./Button";
 import { Task } from "@/types";
 import dayjs from "dayjs";
 const inter = Inter({ subsets: ["latin"] });
 
 import type { Container } from "@/types";
 import { p } from "framer-motion/client";
-import ListItem from "../List/ListItem";
-import ListContainer from "../List/ListContainer";
+import ListItem from "./List/ListItem";
+import ListContainer from "./List/ListContainer";
 
 interface Props {
   containers: Container[];
@@ -46,7 +46,7 @@ interface Props {
   isKanbanView: boolean;
 }
 
-export default function KanbanBoard({
+export default function TaskBoard({
   containers,
   setContainers,
   isKanbanView,

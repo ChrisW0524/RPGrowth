@@ -5,8 +5,7 @@ import { Bell, Settings, User } from "lucide-react";
 
 // Components
 import Sidebar, { SidebarItem } from "@/components/Sidebar";
-import KanbanBoard from "@/components/Kanban/KanbanBoard";
-
+import TaskBoard from "@/components/TaskBoard";
 // Types
 import { Area, Project, Container } from "@/types";
 
@@ -152,7 +151,7 @@ export default function Home() {
         </div>
 
         {/* Render Board */}
-        <KanbanBoard
+        <TaskBoard
           containers={displayedContainers}
           setContainers={handleSetContainers}
           isKanbanView={isKanbanView}
