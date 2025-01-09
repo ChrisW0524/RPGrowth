@@ -6,7 +6,6 @@ import { Bell, Settings, User } from "lucide-react";
 // Components
 import Sidebar, { SidebarItem } from "@/components/Sidebar";
 import KanbanBoard from "@/components/Kanban/KanbanBoard";
-import ListBoard from "@/components/List/ListBoard";
 
 // Types
 import { Area, Project, Container } from "@/types";
@@ -24,7 +23,9 @@ export default function Home() {
 
   // Which area & project the user is viewing
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null,
+  );
 
   // Build containers to display
   let displayedContainers: Container[] = [];
@@ -34,7 +35,9 @@ export default function Home() {
   if (selectedArea) {
     if (selectedProjectId) {
       // If user selected a project
-      const project = selectedArea.projects.find((p) => p.id === selectedProjectId);
+      const project = selectedArea.projects.find(
+        (p) => p.id === selectedProjectId,
+      );
       displayedContainers = project ? project.containers : [];
     } else {
       // No project selected => area-level containers
@@ -47,9 +50,8 @@ export default function Home() {
    *  We replace the containers in the currently viewed project or area.
    */
   function handleSetContainers(newContainers: Container[]) {
-
-    console.log("changing areas")
-    console.log(newContainers)
+    console.log("changing areas");
+    console.log(newContainers);
 
     setAreas((oldAreas) =>
       oldAreas.map((area) => {
@@ -60,7 +62,7 @@ export default function Home() {
 
         // If the user is viewing a specific project
         if (selectedProjectId) {
-          console.log("project")
+          console.log("project");
           return {
             ...area,
             projects: area.projects.map((proj) => {
@@ -73,20 +75,20 @@ export default function Home() {
             }),
           };
         } else {
-          console.log("not project")
+          console.log("not project");
           // Otherwise, update area-level containers
           return {
             ...area,
             containers: newContainers,
           };
         }
-      })
+      }),
     );
   }
 
-  console.log(areas)
+  console.log(areas);
 
-  console.log(displayedContainers)
+  console.log(displayedContainers);
 
   return (
     <div className="flex w-screen">
@@ -99,13 +101,13 @@ export default function Home() {
 
       <div className="flex-1 p-4">
         {/* Top row controls: area and project dropdowns, plus toggle view button */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-4 items-center">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             {/* Area Selector */}
             <div>
               <label className="mr-2">Area:</label>
               <select
-                className="border rounded px-2 py-1"
+                className="rounded border px-2 py-1"
                 value={selectedAreaId}
                 onChange={(e) => {
                   setSelectedAreaId(e.target.value);
@@ -124,7 +126,7 @@ export default function Home() {
             <div>
               <label className="mr-2">Project:</label>
               <select
-                className="border rounded px-2 py-1"
+                className="rounded border px-2 py-1"
                 value={selectedProjectId ?? ""}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -143,18 +145,18 @@ export default function Home() {
 
           <button
             onClick={toggleView}
-            className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
           >
             {isKanbanView ? "Switch to List View" : "Switch to Board View"}
           </button>
         </div>
 
         {/* Render Board */}
-        {isKanbanView ? (
-          <KanbanBoard containers={displayedContainers} setContainers={handleSetContainers} />
-        ) : (
-          <ListBoard containers={displayedContainers} setContainers={handleSetContainers} />
-        )}
+        <KanbanBoard
+          containers={displayedContainers}
+          setContainers={handleSetContainers}
+          isKanbanView={isKanbanView}
+        />
       </div>
     </div>
   );

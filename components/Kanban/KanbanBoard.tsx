@@ -36,14 +36,21 @@ import dayjs from "dayjs";
 const inter = Inter({ subsets: ["latin"] });
 
 import type { Container } from "@/types";
+import { p } from "framer-motion/client";
+import ListItem from "../List/ListItem";
+import ListContainer from "../List/ListContainer";
 
 interface Props {
   containers: Container[];
   setContainers: (newContainers: Container[]) => void;
+  isKanbanView: boolean;
 }
 
-
-export default function KanbanBoard({ containers, setContainers }: Props) {
+export default function KanbanBoard({
+  containers,
+  setContainers,
+  isKanbanView,
+}: Props) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [currentContainerId, setCurrentContainerId] =
     useState<UniqueIdentifier>();
@@ -52,15 +59,18 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
   const [showAddContainerModal, setShowAddContainerModal] = useState(false);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
 
-
-   // Fields for a new task
-   const [taskTitle, setTaskTitle] = useState("");
-   const [taskDescription, setTaskDescription] = useState("");
-   const [taskPriority, setTaskPriority] = useState<"High" | "Medium" | "Low">("Medium");
-   const [taskStatus, setTaskStatus] = useState<"To Do" | "In Progress" | "Completed">("To Do");
-   const [taskExp, setTaskExp] = useState<number>(0);
-   const [taskGold, setTaskGold] = useState<number>(0);
-   const [taskDueDate, setTaskDueDate] = useState<string>(""); // will convert to dayjs
+  // Fields for a new task
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
+  const [taskPriority, setTaskPriority] = useState<"High" | "Medium" | "Low">(
+    "Medium",
+  );
+  const [taskStatus, setTaskStatus] = useState<
+    "To Do" | "In Progress" | "Completed"
+  >("To Do");
+  const [taskExp, setTaskExp] = useState<number>(0);
+  const [taskGold, setTaskGold] = useState<number>(0);
+  const [taskDueDate, setTaskDueDate] = useState<string>(""); // will convert to dayjs
 
   const onAddContainer = () => {
     if (!containerName) return;
@@ -76,44 +86,46 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
     setShowAddContainerModal(false);
   };
 
-    // -- Add a new item
-    const onAddItem = () => {
-      if (!taskTitle.trim() || !currentContainerId) return;
-  
-      // find container
-      const containerIndex = containers.findIndex((c) => c.id === currentContainerId);
-      if (containerIndex === -1) return;
-  
-      const newTask: Task = {
-        id: `task-${uuidv4()}`,
-        title: taskTitle,
-        description: taskDescription,
-        tags: [], // you can store this from user input if you want
-        priority: taskPriority,
-        status: taskStatus,
-        createdDate: dayjs(),
-        dueDate: taskDueDate ? dayjs(taskDueDate) : undefined,
-        exp: taskExp,
-        gold: taskGold,
-        // TODO REPLACE
-        projectId: 0,
-        areaId: 0,
-      };
-  
-      const updatedContainers = [...containers];
-      updatedContainers[containerIndex].items.push(newTask);
-      setContainers(updatedContainers);
-  
-      // reset fields
-      setTaskTitle("");
-      setTaskDescription("");
-      setTaskPriority("Medium");
-      setTaskStatus("To Do");
-      setTaskExp(0);
-      setTaskGold(0);
-      setTaskDueDate("");
-      setShowAddItemModal(false);
+  // -- Add a new item
+  const onAddItem = () => {
+    if (!taskTitle.trim() || !currentContainerId) return;
+
+    // find container
+    const containerIndex = containers.findIndex(
+      (c) => c.id === currentContainerId,
+    );
+    if (containerIndex === -1) return;
+
+    const newTask: Task = {
+      id: `task-${uuidv4()}`,
+      title: taskTitle,
+      description: taskDescription,
+      tags: [], // you can store this from user input if you want
+      priority: taskPriority,
+      status: taskStatus,
+      createdDate: dayjs(),
+      dueDate: taskDueDate ? dayjs(taskDueDate) : undefined,
+      exp: taskExp,
+      gold: taskGold,
+      // TODO REPLACE
+      projectId: 0,
+      areaId: 0,
     };
+
+    const updatedContainers = [...containers];
+    updatedContainers[containerIndex].items.push(newTask);
+    setContainers(updatedContainers);
+
+    // reset fields
+    setTaskTitle("");
+    setTaskDescription("");
+    setTaskPriority("Medium");
+    setTaskStatus("To Do");
+    setTaskExp(0);
+    setTaskGold(0);
+    setTaskDueDate("");
+    setShowAddItemModal(false);
+  };
 
   // Find the value of the items
   function findValueOfItems(id: UniqueIdentifier | undefined, type: string) {
@@ -164,7 +176,7 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
   const handleDragMove = (event: DragMoveEvent) => {
     const { active, over } = event;
 
-    console.log(active, over)
+    console.log(active, over);
 
     // Handle Items Sorting
     if (
@@ -281,14 +293,13 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
         (container) => container.id === over.id,
       );
 
-
-      console.log(activeContainerIndex, overContainerIndex)
+      console.log(activeContainerIndex, overContainerIndex);
 
       // Swap the active and over container
       let newItems = [...containers];
       newItems = arrayMove(newItems, activeContainerIndex, overContainerIndex);
-      console.log(containers)
-      console.log(newItems)
+      console.log(containers);
+      console.log(newItems);
       setContainers(newItems);
     }
 
@@ -443,7 +454,9 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
           {/* Priority & Status (basic selects) */}
           <select
             value={taskPriority}
-            onChange={(e) => setTaskPriority(e.target.value as "High" | "Medium" | "Low")}
+            onChange={(e) =>
+              setTaskPriority(e.target.value as "High" | "Medium" | "Low")
+            }
             className="w-full rounded-lg border p-2 shadow-lg hover:shadow-xl"
           >
             <option value="High">High</option>
@@ -453,7 +466,9 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
           <select
             value={taskStatus}
             onChange={(e) =>
-              setTaskStatus(e.target.value as "To Do" | "In Progress" | "Completed")
+              setTaskStatus(
+                e.target.value as "To Do" | "In Progress" | "Completed",
+              )
             }
             className="w-full rounded-lg border p-2 shadow-lg hover:shadow-xl"
           >
@@ -470,53 +485,109 @@ export default function KanbanBoard({ containers, setContainers }: Props) {
           Add Container
         </Button>
       </div>
-      <div className="mt-10">
-        <div className="grid grid-cols-3 gap-6">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragMove={handleDragMove}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext items={containers.map((i) => i.id)}>
-              {containers.map((container) => (
-                <KanbanContainer
-                  id={container.id}
-                  title={container.name}
-                  key={container.id}
-                  onAddItem={() => {
-                    setShowAddItemModal(true);
-                    setCurrentContainerId(container.id);
-                  }}
-                >
-                  <SortableContext items={container.items.map((i) => i.id)}>
-                    <div className="flex flex-col items-start gap-y-4">
-                      {container.items.map((i) => (
-                        <KanbanItem {...i} key={i.id} />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </KanbanContainer>
-              ))}
-            </SortableContext>
-            <DragOverlay adjustScale={false}>
-              {/* Drag Overlay For item Item */}
-              {activeId && activeId.toString().includes("task") && (
-                <KanbanItem id={activeId} {...findItem(activeId)} />
-              )}
-              {/* Drag Overlay For Container */}
-              {activeId && activeId.toString().includes("container") && (
-                <KanbanContainer id={activeId} title={findContainerName(activeId)}>
-                  {findContainerItems(activeId).map((i) => (
-                    <KanbanItem {...i} key={i.id} />
-                  ))}
-                </KanbanContainer>
-              )}
-            </DragOverlay>
-          </DndContext>
+      {isKanbanView ? (
+        <div className="mt-10">
+          <div className="grid grid-cols-3 gap-6">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragMove={handleDragMove}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={containers.map((i) => i.id)}>
+                {containers.map((container) => (
+                  <KanbanContainer
+                    id={container.id}
+                    title={container.name}
+                    key={container.id}
+                    onAddItem={() => {
+                      setShowAddItemModal(true);
+                      setCurrentContainerId(container.id);
+                    }}
+                  >
+                    <SortableContext items={container.items.map((i) => i.id)}>
+                      <div className="flex flex-col items-start gap-y-4">
+                        {container.items.map((i) => (
+                          <KanbanItem {...i} key={i.id} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </KanbanContainer>
+                ))}
+              </SortableContext>
+              <DragOverlay adjustScale={false}>
+                {/* Drag Overlay For item Item */}
+                {activeId && activeId.toString().includes("task") && (
+                  <KanbanItem id={activeId} {...findItem(activeId)} />
+                )}
+                {/* Drag Overlay For Container */}
+                {activeId && activeId.toString().includes("container") && (
+                  <KanbanContainer
+                    id={activeId}
+                    title={findContainerName(activeId)}
+                  >
+                    {findContainerItems(activeId).map((i) => (
+                      <KanbanItem {...i} key={i.id} />
+                    ))}
+                  </KanbanContainer>
+                )}
+              </DragOverlay>
+            </DndContext>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="mt-10">
+          <div className="flex flex-col gap-6">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragMove={handleDragMove}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={containers.map((i) => i.id)}>
+                {containers.map((container) => (
+                  <ListContainer
+                    id={container.id}
+                    title={container.name}
+                    key={container.id}
+                    onAddItem={() => {
+                      setShowAddItemModal(true);
+                      setCurrentContainerId(container.id);
+                    }}
+                  >
+                    <SortableContext items={container.items.map((i) => i.id)}>
+                      <div className="flex flex-col items-start gap-y-4">
+                        {container.items.map((i) => (
+                          <ListItem {...i} key={i.id} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </ListContainer>
+                ))}
+              </SortableContext>
+              <DragOverlay adjustScale={false}>
+                {/* Drag Overlay For item Item */}
+                {activeId && activeId.toString().includes("task") && (
+                  <ListItem id={activeId} {...findItem(activeId)} />
+                )}
+                {/* Drag Overlay For Container */}
+                {activeId && activeId.toString().includes("container") && (
+                  <ListContainer
+                    id={activeId}
+                    title={findContainerName(activeId)}
+                  >
+                    {findContainerItems(activeId).map((i) => (
+                      <ListItem {...i} key={i.id} />
+                    ))}
+                  </ListContainer>
+                )}
+              </DragOverlay>
+            </DndContext>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
