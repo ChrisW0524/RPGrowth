@@ -12,7 +12,7 @@ export type Type = {
   title: string;
 };
 
-export interface TaskType {
+export interface Task {
   id: Id
   title: string;
   description: string;
@@ -24,11 +24,29 @@ export interface TaskType {
   dueDate?: Dayjs;
   exp?: number;
   gold?: number;
+
+  projectId: Id;
+  areaId: Id;
 }
 
 // For your container, reference TaskType in items:
-export interface ContainerType {
+export interface Container {
   id: Id
-  title: string;
-  items: TaskType[];
+  name: string;
+  items: Task[];
 }
+
+export interface Area {
+  id: Id;
+  name: string;       // e.g. "Academics", "Finances", "Health"
+  containers: Container[];
+  projects: Project[];
+}
+
+export interface Project {
+  id: Id;
+  name: string;        // e.g. "Math Homework", "Budget Planning"
+  areaId: Id;      // which area it belongs to
+  containers: Container[];
+}
+

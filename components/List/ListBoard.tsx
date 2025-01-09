@@ -32,14 +32,14 @@ import Modal from "../Modal";
 import Input from "../Input";
 import { Button } from "../Button";
 
-import { TaskType, ContainerType } from "@/types";
+import { Task, Container } from "@/types";
 import dayjs from "dayjs";
 
 const inter = Inter({ subsets: ["latin"] });
 
 type Props = {
-  containers: ContainerType[];
-  setContainers: React.Dispatch<React.SetStateAction<ContainerType[]>>;
+  containers: Container[];
+  setContainers: React.Dispatch<React.SetStateAction<Container[]>>;
 };
 
 export default function ListBoard({ containers, setContainers }: Props) {
@@ -66,7 +66,7 @@ export default function ListBoard({ containers, setContainers }: Props) {
       ...containers,
       {
         id: `container-${uuidv4()}`,
-        title: containerName,
+        name: containerName,
         items: [],
       },
     ]);
@@ -81,7 +81,7 @@ export default function ListBoard({ containers, setContainers }: Props) {
         const containerIndex = containers.findIndex((c) => c.id === currentContainerId);
         if (containerIndex === -1) return;
     
-        const newTask: TaskType = {
+        const newTask: Task = {
           id: `item-${uuidv4()}`,
           title: taskTitle,
           description: taskDescription,
@@ -92,6 +92,9 @@ export default function ListBoard({ containers, setContainers }: Props) {
           dueDate: taskDueDate ? dayjs(taskDueDate) : undefined,
           exp: taskExp,
           gold: taskGold,
+          // TODO REPLACE
+        projectId: 0,
+        areaId: 0,
         };
     
         const updatedContainers = [...containers];
@@ -134,7 +137,7 @@ export default function ListBoard({ containers, setContainers }: Props) {
   const findContainerTitle = (id: UniqueIdentifier | undefined) => {
     const container = findValueOfItems(id, "container");
     if (!container) return "";
-    return container.title;
+    return container.name;
   };
 
   const findContainerItems = (id: UniqueIdentifier | undefined) => {
@@ -471,7 +474,7 @@ export default function ListBoard({ containers, setContainers }: Props) {
               {containers.map((container) => (
                 <ListContainer
                   id={container.id}
-                  title={container.title}
+                  title={container.name}
                   key={container.id}
                   onAddItem={() => {
                     setShowAddItemModal(true);
