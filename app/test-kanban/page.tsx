@@ -6,6 +6,7 @@ import { Bell, Settings, User } from "lucide-react";
 // Components
 import Sidebar, { SidebarItem } from "@/components/Sidebar";
 import TaskBoard from "@/components/TaskBoard";
+
 // Types
 import { Area, Project, Container } from "@/types";
 
@@ -20,11 +21,9 @@ export default function Home() {
   // All areas in state
   const [areas, setAreas] = useState<Area[]>(sampleAreas);
 
-  // Which area & project the user is viewing
-  const [selectedAreaId, setSelectedAreaId] = useState<string>("");
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    null,
-  );
+  // Track selected area / project
+  const [selectedAreaId, setSelectedAreaId] = useState<string>(""); 
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   // Build containers to display
   let displayedContainers: Container[] = [];
@@ -34,9 +33,7 @@ export default function Home() {
   if (selectedArea) {
     if (selectedProjectId) {
       // If user selected a project
-      const project = selectedArea.projects.find(
-        (p) => p.id === selectedProjectId,
-      );
+      const project = selectedArea.projects.find((p) => p.id === selectedProjectId);
       displayedContainers = project ? project.containers : [];
     } else {
       // No project selected => area-level containers
@@ -45,37 +42,26 @@ export default function Home() {
   }
 
   /**
-   * This is the critical function:
-   *  We replace the containers in the currently viewed project or area.
+   * Called by <TaskBoard> to update the currently viewed containers
+   * (area-level or project-level).
    */
   function handleSetContainers(newContainers: Container[]) {
-    console.log("changing areas");
-    console.log(newContainers);
-
     setAreas((oldAreas) =>
       oldAreas.map((area) => {
-        if (area.id !== selectedAreaId) {
-          // If it's not the selected area, return as is
-          return area;
-        }
+        if (area.id !== selectedAreaId) return area;
 
-        // If the user is viewing a specific project
         if (selectedProjectId) {
-          console.log("project");
+          // Update containers in the selected project
           return {
             ...area,
-            projects: area.projects.map((proj) => {
-              if (proj.id !== selectedProjectId) return proj;
-              return {
-                ...proj,
-                // Override the containers with newContainers
-                containers: newContainers,
-              };
-            }),
+            projects: area.projects.map((proj) =>
+              proj.id === selectedProjectId
+                ? { ...proj, containers: newContainers }
+                : proj,
+            ),
           };
         } else {
-          console.log("not project");
-          // Otherwise, update area-level containers
+          // Update area-level containers
           return {
             ...area,
             containers: newContainers,
@@ -85,63 +71,41 @@ export default function Home() {
     );
   }
 
-  console.log(areas);
+  // Handlers passed to the sidebar
+  function handleSelectMain() {
+    // "Main" => no area, no project
+    setSelectedAreaId("");
+    setSelectedProjectId(null);
+  }
 
-  console.log(displayedContainers);
+  function handleSelectArea(areaId: string) {
+    setSelectedAreaId(areaId);
+    setSelectedProjectId(null); // Reset project if area changed
+  }
+
+  function handleSelectProject(areaId: string, projectId: string) {
+    // Optionally ensure we pick the correct area
+    setSelectedAreaId(areaId);
+    setSelectedProjectId(projectId);
+  }
 
   return (
     <div className="flex w-screen">
       {/* Sidebar */}
-      <Sidebar>
-        <SidebarItem icon={<Bell size={20} />} text="Notifications" alert />
-        <SidebarItem icon={<User size={20} />} text="Profile" />
-        <SidebarItem icon={<Settings size={20} />} text="Settings" />
+      <Sidebar
+        areas={areas}
+        onSelectMain={handleSelectMain}
+        onSelectArea={handleSelectArea}
+        onSelectProject={handleSelectProject}
+        selectedAreaId={selectedAreaId}
+        selectedProjectId={selectedProjectId}
+      >
+        {/* No direct children needed here if you handle everything in the sidebar */}
       </Sidebar>
 
       <div className="flex-1 p-4">
-        {/* Top row controls: area and project dropdowns, plus toggle view button */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* Area Selector */}
-            <div>
-              <label className="mr-2">Area:</label>
-              <select
-                className="rounded border px-2 py-1"
-                value={selectedAreaId}
-                onChange={(e) => {
-                  setSelectedAreaId(e.target.value);
-                  setSelectedProjectId(null); // reset project if area changes
-                }}
-              >
-                {areas.map((area) => (
-                  <option key={area.id} value={area.id}>
-                    {area.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Project Selector */}
-            <div>
-              <label className="mr-2">Project:</label>
-              <select
-                className="rounded border px-2 py-1"
-                value={selectedProjectId ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setSelectedProjectId(val === "" ? null : val);
-                }}
-              >
-                <option value="">-- None --</option>
-                {selectedArea?.projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
+        {/* Toggle View Button */}
+        <div className="mb-4 flex items-center justify-end">
           <button
             onClick={toggleView}
             className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"

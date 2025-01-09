@@ -100,17 +100,17 @@ export const sampleProjects: Project[] = [
     areaId: "area-1",
     containers: [
       {
-        id: "proj1-todo",
+        id: "container-todo",
         name: "Project 1 - To Do",
         items: sampleTasks.filter((t) => t.projectId === "project-1" && t.status === "To Do"),
       },
       {
-        id: "proj1-inprogress",
+        id: "container-inprogress",
         name: "Project 1 - In Progress",
         items: sampleTasks.filter((t) => t.projectId === "project-1" && t.status === "In Progress"),
       },
       {
-        id: "proj1-completed",
+        id: "container-completed",
         name: "Project 1 - Completed",
         items: sampleTasks.filter((t) => t.projectId === "project-1" && t.status === "Completed"),
       },
@@ -122,17 +122,17 @@ export const sampleProjects: Project[] = [
     areaId: "area-2",
     containers: [
       {
-        id: "proj2-todo",
+        id: "container-todo",
         name: "Project 2 - To Do",
         items: sampleTasks.filter((t) => t.projectId === "project-2" && t.status === "To Do"),
       },
       {
-        id: "proj2-inprogress",
+        id: "container-inprogress",
         name: "Project 2 - In Progress",
         items: sampleTasks.filter((t) => t.projectId === "project-2" && t.status === "In Progress"),
       },
       {
-        id: "proj2-completed",
+        id: "container-completed",
         name: "Project 2 - Completed",
         items: sampleTasks.filter((t) => t.projectId === "project-2" && t.status === "Completed"),
       },
@@ -144,17 +144,17 @@ export const sampleProjects: Project[] = [
     areaId: "area-3",
     containers: [
       {
-        id: "proj3-todo",
+        id: "container-todo",
         name: "Project 3 - To Do",
         items: sampleTasks.filter((t) => t.projectId === "project-3" && t.status === "To Do"),
       },
       {
-        id: "proj3-inprogress",
+        id: "container-inprogress",
         name: "Project 3 - In Progress",
         items: sampleTasks.filter((t) => t.projectId === "project-3" && t.status === "In Progress"),
       },
       {
-        id: "proj3-completed",
+        id: "container-completed",
         name: "Project 3 - Completed",
         items: sampleTasks.filter((t) => t.projectId === "project-3" && t.status === "Completed"),
       },
