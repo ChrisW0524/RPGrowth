@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, Settings, User } from "lucide-react";
 
 // Components
-import Sidebar, { SidebarItem } from "@/components/Sidebar";
+import Sidebar from "@/components/Sidebar";
 import TaskBoard from "@/components/TaskBoard";
 
 // Types
@@ -12,6 +11,7 @@ import { Area, Project, Container } from "@/types";
 
 // Sample Data
 import { sampleAreas } from "@/testData";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   // Toggle between Kanban/List
@@ -22,8 +22,10 @@ export default function Home() {
   const [areas, setAreas] = useState<Area[]>(sampleAreas);
 
   // Track selected area / project
-  const [selectedAreaId, setSelectedAreaId] = useState<string>(""); 
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedAreaId, setSelectedAreaId] = useState<string>("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null,
+  );
 
   // Build containers to display
   let displayedContainers: Container[] = [];
@@ -33,7 +35,9 @@ export default function Home() {
   if (selectedArea) {
     if (selectedProjectId) {
       // If user selected a project
-      const project = selectedArea.projects.find((p) => p.id === selectedProjectId);
+      const project = selectedArea.projects.find(
+        (p) => p.id === selectedProjectId,
+      );
       displayedContainers = project ? project.containers : [];
     } else {
       // No project selected => area-level containers
@@ -90,37 +94,40 @@ export default function Home() {
   }
 
   return (
-    <div className="flex w-screen">
-      {/* Sidebar */}
-      <Sidebar
-        areas={areas}
-        onSelectMain={handleSelectMain}
-        onSelectArea={handleSelectArea}
-        onSelectProject={handleSelectProject}
-        selectedAreaId={selectedAreaId}
-        selectedProjectId={selectedProjectId}
-      >
-        {/* No direct children needed here if you handle everything in the sidebar */}
-      </Sidebar>
+    <div className="w-screen">
+        <Navbar></Navbar>
+        {/* Sidebar */}
+        <div className="flex w-full">
+        <Sidebar
+          areas={areas}
+          onSelectMain={handleSelectMain}
+          onSelectArea={handleSelectArea}
+          onSelectProject={handleSelectProject}
+          selectedAreaId={selectedAreaId}
+          selectedProjectId={selectedProjectId}
+        >
+          {/* No direct children needed here if you handle everything in the sidebar */}
+        </Sidebar>
 
-      <div className="flex-1 p-4">
-        {/* Toggle View Button */}
-        <div className="mb-4 flex items-center justify-end">
-          <button
-            onClick={toggleView}
-            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-          >
-            {isKanbanView ? "Switch to List View" : "Switch to Board View"}
-          </button>
+        <div className="flex-1 p-4">
+          {/* Toggle View Button */}
+          <div className="mb-4 flex items-center justify-end">
+            <button
+              onClick={toggleView}
+              className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+            >
+              {isKanbanView ? "Switch to List View" : "Switch to Board View"}
+            </button>
+          </div>
+
+          {/* Render Board */}
+          <TaskBoard
+            containers={displayedContainers}
+            setContainers={handleSetContainers}
+            isKanbanView={isKanbanView}
+          />
         </div>
-
-        {/* Render Board */}
-        <TaskBoard
-          containers={displayedContainers}
-          setContainers={handleSetContainers}
-          isKanbanView={isKanbanView}
-        />
       </div>
-    </div>
+      </div>
   );
 }
