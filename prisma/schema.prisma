@@ -1,12 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// schema.prisma
 
 datasource db {
-  provider = "mongodb"
+  provider = "mongodb" // or "mysql" / "sqlite" depending on your setup
   url      = env("DATABASE_URL")
 }
 
@@ -14,35 +9,184 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Post {
-  id       String    @id @default(auto()) @map("_id") @db.ObjectId
-  slug     String    @unique
-  title    String
-  body     String
-  author   User      @relation(fields: [authorId], references: [id])
-  authorId String    @db.ObjectId
-  comments Comment[]
+// ------------------------------------------------------------
+// Enums
+// ------------------------------------------------------------
+enum Priority {
+  HIGHEST
+  HIGH
+  MEDIUM
+  LOW
+  LOWEST
 }
+
+enum Status {
+  DONE
+  IN_PROGRESS
+  WAITING
+  NEXT
+  LATER
+}
+
+enum Difficulty {
+  VERY_EASY
+  EASY
+  MODERATE
+  DIFFICULT
+  VERY_DIFFICULT
+}
+
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+// ------------------------------------------------------------
+// Models
+// ------------------------------------------------------------
 
 model User {
-  id      String   @id @default(auto()) @map("_id") @db.ObjectId
-  email   String   @unique
-  name    String?
-  address Address?
-  posts   Post[]
+  id        String   @id @default(uuid()) @map("_id")
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations (each user can have multiple areas, projects, containers, tasks)
+  areas      Area[]
+  projects   Project[]
+  containers Container[]
+  tasks      Task[]
+
+  Habit Habit[]
+
+  HabitLog HabitLog[]
 }
 
-model Comment {
-  id      String @id @default(auto()) @map("_id") @db.ObjectId
-  comment String
-  post    Post   @relation(fields: [postId], references: [id])
-  postId  String @db.ObjectId
+model Area {
+  id   String @id @default(uuid()) @map("_id")
+  name String
+
+  // Owned by a single user
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Each Area can have multiple containers and projects
+  containers Container[]
+  projects   Project[]
+
+  Task Task[]
 }
 
-// Address is an embedded document
-type Address {
-  street String
-  city   String
-  state  String
-  zip    String
+model Project {
+  id   String @id @default(uuid()) @map("_id")
+  name String
+
+  // Owned by a single user
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Also linked to exactly one Area
+  areaId String
+  area   Area   @relation(fields: [areaId], references: [id])
+
+  // Each project can have multiple containers
+  containers Container[]
+
+  Task Task[]
+}
+
+model Container {
+  id   String @id @default(uuid()) @map("_id")
+  name String
+
+  // Owned by a single user
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Optionally belongs to an area
+  areaId String?
+  area   Area?   @relation(fields: [areaId], references: [id])
+
+  // Or optionally belongs to a project
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  // Container can hold many tasks
+  tasks Task[]
+}
+
+model Task {
+  id            String    @id @default(uuid()) @map("_id")
+  title         String
+  description   String?
+  tags          String[]  // PostgreSQL array of strings
+  priority      Priority?
+  status        Status?
+  difficulty    Difficulty?
+  estimate      Int?
+
+  createdDate   DateTime  @default(now())
+  completedDate DateTime?
+  dueDate       DateTime?
+  exp           Int?
+  gold          Int?
+
+  // Owned by a single user
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+
+  // Optionally links to an Area (if you want direct reference)
+  areaId        String?
+  area          Area?      @relation(fields: [areaId], references: [id])
+
+  // Optionally links to a Project
+  projectId     String?
+  project       Project?   @relation(fields: [projectId], references: [id])
+
+  // Container relationship (where this task is currently placed)
+  containerId   String?
+  container     Container? @relation(fields: [containerId], references: [id])
+}
+
+model Habit {
+  id          String     @id @default(uuid()) @map("_id")
+  name        String
+  description String
+  
+  difficulty  Difficulty
+  skipDays    Weekday[]   // Days to skip the habit
+  exp         Int?
+  gold        Int?
+
+  streakCount Int         @default(0)
+  bestStreak  Int         @default(0)
+
+  createdAt   DateTime    @default(now())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+
+  // Relationship to habit logs
+  habitLogs HabitLog[]
+}
+
+model HabitLog {
+  id        String   @id @default(uuid()) @map("_id")
+  date      DateTime // Date the habit was completed
+
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id])
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  // Optional metadata (e.g., was it skipped or completed?)
+  completed Boolean   @default(true)
+  xpAwarded Int?
+  createdAt DateTime  @default(now())
 }
