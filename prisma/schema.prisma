@@ -66,6 +66,9 @@ model User {
   Habit Habit[]
 
   HabitLog HabitLog[]
+
+  exp Int
+  gold Int
 }
 
 model Area {
