@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Components
 import Sidebar from "@/components/Sidebar";
@@ -10,22 +10,43 @@ import TaskBoard from "@/components/TaskBoard";
 import { Area, Project, Container } from "@/types";
 
 // Sample Data
-import { sampleAreas } from "@/testData";
+// import { sampleAreas } from "@/testData";
 import Navbar from "@/components/Navbar";
 
+import { useApi } from "@/utils/api";
+
 export default function Home() {
+  const { fetchWithAuth } = useApi();
+  
   // Toggle between Kanban/List
   const [isKanbanView, setIsKanbanView] = useState(true);
   const toggleView = () => setIsKanbanView((prev) => !prev);
 
   // All areas in state
-  const [areas, setAreas] = useState<Area[]>(sampleAreas);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Track selected area / project
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null,
   );
+
+  useEffect(() => {
+    async function fetchAreas() {
+      try {
+        setLoading(true);
+        const data = await fetchWithAuth("/api/areas");
+        setAreas(data);
+      } catch (err) {
+        setError("Failed to load areas");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAreas();
+  }, []);
 
   // Build containers to display
   let displayedContainers: Container[] = [];
@@ -95,9 +116,9 @@ export default function Home() {
 
   return (
     <div className="w-screen">
-        <Navbar></Navbar>
-        {/* Sidebar */}
-        <div className="flex w-full">
+      <Navbar></Navbar>
+      {/* Sidebar */}
+      <div className="flex w-full">
         <Sidebar
           areas={areas}
           onSelectMain={handleSelectMain}
@@ -128,6 +149,6 @@ export default function Home() {
           />
         </div>
       </div>
-      </div>
+    </div>
   );
 }

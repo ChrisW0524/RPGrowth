@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { SwitchContextProvider } from "@/context/SwitchContext";
+import { ClerkProvider } from "@clerk/nextjs";
 
 // TODO: Replace this with the fonts that designers provide.
 const geistSans = localFont({
@@ -23,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <SwitchContextProvider>
+        <ClerkProvider>
         <body className={`${geistSans.variable} antialiased`}>{children}</body>
+        </ClerkProvider>
       </SwitchContextProvider>
     </html>
   );

@@ -1,5 +1,4 @@
 import {
-  ClerkProvider,
   SignInButton,
   SignedIn,
   SignedOut,
@@ -20,7 +19,6 @@ export default function RootLayout({
   };
 
   return (
-    <ClerkProvider>
       <html lang="en">
         <body>
           <SignedOut>
@@ -33,6 +31,5 @@ export default function RootLayout({
           <button onClick={handleGetToken}>Log Clerk Token</button>;
         </body>
       </html>
-    </ClerkProvider>
   );
 }

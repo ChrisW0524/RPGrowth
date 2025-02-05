@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 
 import {
-  ClerkProvider,
   SignInButton,
   SignedIn,
   SignedOut,
@@ -21,7 +20,6 @@ const Navbar = () => {
   };
 
   return (
-    <ClerkProvider>
       <nav className="bg-gray-800 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -122,7 +120,6 @@ const Navbar = () => {
           </div>
         )}
       </nav>
-    </ClerkProvider>
   );
 };
 
