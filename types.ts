@@ -33,7 +33,7 @@ export interface Task {
 export interface Container {
   id: Id
   name: string;
-  items: Task[];
+  tasks: Task[];
 }
 
 export interface Area {

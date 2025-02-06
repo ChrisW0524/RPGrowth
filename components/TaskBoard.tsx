@@ -72,6 +72,8 @@ export default function TaskBoard({
   const [taskGold, setTaskGold] = useState<number>(0);
   const [taskDueDate, setTaskDueDate] = useState<string>(""); // will convert to dayjs
 
+  console.log(containers)
+
   const onAddContainer = () => {
     if (!containerName) return;
     setContainers([
@@ -79,7 +81,7 @@ export default function TaskBoard({
       {
         id: `container-${uuidv4()}`,
         name: containerName,
-        items: [],
+        tasks: [],
       },
     ]);
     setContainerName("");
@@ -113,7 +115,7 @@ export default function TaskBoard({
     };
 
     const updatedContainers = [...containers];
-    updatedContainers[containerIndex].items.push(newTask);
+    updatedContainers[containerIndex].tasks.push(newTask);
     setContainers(updatedContainers);
 
     // reset fields
@@ -134,7 +136,7 @@ export default function TaskBoard({
     }
     if (type === "item") {
       return containers.find((container) =>
-        container.items.find((item) => item.id === id),
+        container.tasks.find((item) => item.id === id),
       );
     }
   }
@@ -142,7 +144,7 @@ export default function TaskBoard({
   const findItem = (id: UniqueIdentifier | undefined) => {
     const container = findValueOfItems(id, "item");
     if (!container) return "";
-    const item = container.items.find((item) => item.id === id);
+    const item = container.tasks.find((item) => item.id === id);
     if (!item) return "";
     return item;
   };
@@ -156,7 +158,7 @@ export default function TaskBoard({
   const findContainerItems = (id: UniqueIdentifier | undefined) => {
     const container = findValueOfItems(id, "container");
     if (!container) return [];
-    return container.items;
+    return container.tasks;
   };
 
   // DND Handlers
@@ -202,17 +204,17 @@ export default function TaskBoard({
       );
 
       // Find the index of the active and over item
-      const activeitemIndex = activeContainer.items.findIndex(
+      const activeitemIndex = activeContainer.tasks.findIndex(
         (item) => item.id === active.id,
       );
-      const overitemIndex = overContainer.items.findIndex(
+      const overitemIndex = overContainer.tasks.findIndex(
         (item) => item.id === over.id,
       );
       // In the same container
       if (activeContainerIndex === overContainerIndex) {
         let newItems = [...containers];
-        newItems[activeContainerIndex].items = arrayMove(
-          newItems[activeContainerIndex].items,
+        newItems[activeContainerIndex].tasks = arrayMove(
+          newItems[activeContainerIndex].tasks,
           activeitemIndex,
           overitemIndex,
         );
@@ -221,11 +223,11 @@ export default function TaskBoard({
       } else {
         // In different containers
         let newItems = [...containers];
-        const [removeditem] = newItems[activeContainerIndex].items.splice(
+        const [removeditem] = newItems[activeContainerIndex].tasks.splice(
           activeitemIndex,
           1,
         );
-        newItems[overContainerIndex].items.splice(
+        newItems[overContainerIndex].tasks.splice(
           overitemIndex,
           0,
           removeditem,
@@ -258,17 +260,17 @@ export default function TaskBoard({
       );
 
       // Find the index of the active and over item
-      const activeitemIndex = activeContainer.items.findIndex(
+      const activeitemIndex = activeContainer.tasks.findIndex(
         (item) => item.id === active.id,
       );
 
       // Remove the active item from the active container and add it to the over container
       let newItems = [...containers];
-      const [removeditem] = newItems[activeContainerIndex].items.splice(
+      const [removeditem] = newItems[activeContainerIndex].tasks.splice(
         activeitemIndex,
         1,
       );
-      newItems[overContainerIndex].items.push(removeditem);
+      newItems[overContainerIndex].tasks.push(removeditem);
       setContainers(newItems);
     }
   };
@@ -325,18 +327,18 @@ export default function TaskBoard({
         (container) => container.id === overContainer.id,
       );
       // Find the index of the active and over item
-      const activeitemIndex = activeContainer.items.findIndex(
+      const activeitemIndex = activeContainer.tasks.findIndex(
         (item) => item.id === active.id,
       );
-      const overitemIndex = overContainer.items.findIndex(
+      const overitemIndex = overContainer.tasks.findIndex(
         (item) => item.id === over.id,
       );
 
       // In the same container
       if (activeContainerIndex === overContainerIndex) {
         let newItems = [...containers];
-        newItems[activeContainerIndex].items = arrayMove(
-          newItems[activeContainerIndex].items,
+        newItems[activeContainerIndex].tasks = arrayMove(
+          newItems[activeContainerIndex].tasks,
           activeitemIndex,
           overitemIndex,
         );
@@ -344,11 +346,11 @@ export default function TaskBoard({
       } else {
         // In different containers
         let newItems = [...containers];
-        const [removeditem] = newItems[activeContainerIndex].items.splice(
+        const [removeditem] = newItems[activeContainerIndex].tasks.splice(
           activeitemIndex,
           1,
         );
-        newItems[overContainerIndex].items.splice(
+        newItems[overContainerIndex].tasks.splice(
           overitemIndex,
           0,
           removeditem,
@@ -378,16 +380,16 @@ export default function TaskBoard({
         (container) => container.id === overContainer.id,
       );
       // Find the index of the active and over item
-      const activeitemIndex = activeContainer.items.findIndex(
+      const activeitemIndex = activeContainer.tasks.findIndex(
         (item) => item.id === active.id,
       );
 
       let newItems = [...containers];
-      const [removeditem] = newItems[activeContainerIndex].items.splice(
+      const [removeditem] = newItems[activeContainerIndex].tasks.splice(
         activeitemIndex,
         1,
       );
-      newItems[overContainerIndex].items.push(removeditem);
+      newItems[overContainerIndex].tasks.push(removeditem);
       setContainers(newItems);
     }
     setActiveId(null);
@@ -495,8 +497,8 @@ export default function TaskBoard({
               onDragMove={handleDragMove}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext items={containers.map((i) => i.id)}>
-                {containers.map((container) => (
+              <SortableContext items={(containers ?? []).map((i) => i.id)}>
+                {(containers ?? []).map((container) => (
                   <KanbanContainer
                     id={container.id}
                     title={container.name}
@@ -506,9 +508,9 @@ export default function TaskBoard({
                       setCurrentContainerId(container.id);
                     }}
                   >
-                    <SortableContext items={container.items.map((i) => i.id)}>
+                    <SortableContext items={container.tasks.map((i) => i.id)}>
                       <div className="flex flex-col items-start gap-y-4">
-                        {container.items.map((i) => (
+                        {container.tasks.map((i) => (
                           <KanbanItem {...i} key={i.id} />
                         ))}
                       </div>
@@ -546,7 +548,7 @@ export default function TaskBoard({
               onDragMove={handleDragMove}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext items={containers.map((i) => i.id)}>
+              <SortableContext items={(containers ?? []).map((i) => i.id)}>
                 {containers.map((container) => (
                   <ListContainer
                     id={container.id}
@@ -557,9 +559,9 @@ export default function TaskBoard({
                       setCurrentContainerId(container.id);
                     }}
                   >
-                    <SortableContext items={container.items.map((i) => i.id)}>
+                    <SortableContext items={container.tasks.map((i) => i.id)}>
                       <div className="flex flex-col items-start gap-y-4">
-                        {container.items.map((i) => (
+                        {container.tasks.map((i) => (
                           <ListItem {...i} key={i.id} />
                         ))}
                       </div>

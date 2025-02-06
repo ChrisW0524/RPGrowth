@@ -56,7 +56,7 @@ const kanbanItem = (props: TaskType) => {
         </button>
       </div>
 
-      {/* Additional fields */}
+      {/* Additional fields
       <div className="mt-2 space-y-1 text-xs text-gray-500">
         <div>
           <strong>Priority:</strong> {priority}
@@ -100,7 +100,7 @@ const kanbanItem = (props: TaskType) => {
             ))}
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

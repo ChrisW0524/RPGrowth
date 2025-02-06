@@ -32,6 +32,8 @@ export default function Home() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null,
   );
+  const [containers, setContainers] = useState<Container[]>([]); // Holds containers for display
+
   
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function Home() {
 
 
   // Build containers to display
-  let displayedContainers: Container[] = [];
+  let displayedContainers: Container[] = containers;
 
   const selectedArea = areas.find((a) => a.id === selectedAreaId);
 
@@ -106,17 +108,31 @@ export default function Home() {
     // "Main" => no area, no project
     setSelectedAreaId("");
     setSelectedProjectId(null);
+    setContainers([]);
   }
 
-  function handleSelectArea(areaId: string) {
+  async function handleSelectArea(areaId: string) {
     setSelectedAreaId(areaId);
-    setSelectedProjectId(null); // Reset project if area changed
+    setSelectedProjectId(null); // Clear project selection
+  
+    try {
+      const areaData = await fetchWithAuth(`/api/areas/${areaId}`); // Fetch area by ID
+      setContainers(areaData.containers); // ✅ Set area containers in state
+    } catch (error) {
+      console.error("Failed to fetch area containers", error);
+    }
   }
 
-  function handleSelectProject(areaId: string, projectId: string) {
-    // Optionally ensure we pick the correct area
+  async function handleSelectProject(areaId: string, projectId: string) {
     setSelectedAreaId(areaId);
     setSelectedProjectId(projectId);
+  
+    try {
+      const projectData = await fetchWithAuth(`/api/projects/${projectId}`); // Fetch project by ID
+      setContainers(projectData.containers); // ✅ Set project containers in state
+    } catch (error) {
+      console.error("Failed to fetch project containers", error);
+    }
   }
 
   return (
@@ -148,8 +164,8 @@ export default function Home() {
 
           {/* Render Board */}
           <TaskBoard
-            containers={displayedContainers}
-            setContainers={handleSetContainers}
+            containers={containers}
+            setContainers={setContainers}
             isKanbanView={isKanbanView}
           />
         </div>
