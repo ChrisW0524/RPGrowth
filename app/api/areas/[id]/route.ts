@@ -24,7 +24,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
     const area = await prisma.area.findUnique({
       where: { id: params.id },
       // Optional: include relations
-      include: { containers: true, projects: true },
+      include: { containers: {include:{tasks: true}}, projects: true },
     });
 
     // Verify the area belongs to this user

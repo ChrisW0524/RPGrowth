@@ -32,6 +32,7 @@ export default function Home() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null,
   );
+  
 
   useEffect(() => {
     async function fetchAreas() {
@@ -49,6 +50,8 @@ export default function Home() {
     fetchAreas();
     
   }, []);
+
+
 
   // Build containers to display
   let displayedContainers: Container[] = [];

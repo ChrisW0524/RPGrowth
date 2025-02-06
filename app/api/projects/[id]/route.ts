@@ -1,8 +1,8 @@
 // =/ app/api/projects/[id]/route.ts
 
-import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import prisma from '@/prisma/prisma';
+import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import prisma from "@/prisma/prisma";
 
 interface Params {
   params: {
@@ -12,31 +12,43 @@ interface Params {
 
 /**
  * GET /api/projects/[id]
- * Fetch a single project (must be owned by the current user)
+ * Fetch a single project with its containers and tasks.
  */
 export async function GET(_req: Request, { params }: Params) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    // Find the project by ID
+    // Retrieve the project by ID with containers and their tasks
     const project = await prisma.project.findUnique({
       where: { id: params.id },
-      // include: { containers: true, Task: true } // If you want relations
+      include: {
+        containers: {
+          include: {
+            tasks: true, // ✅ Fetch tasks inside containers
+          },
+        },
+      },
     });
 
-    // Check ownership
+    // Verify the project belongs to this user
     if (!project || project.userId !== userId) {
-      return NextResponse.json({ error: 'Project not found or unauthorized' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Project not found or unauthorized" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json(project, { status: 200 });
   } catch (error) {
-    console.error('Error fetching project:', error);
-    return NextResponse.json({ error: 'Error fetching project' }, { status: 500 });
+    console.error("Error fetching project:", error);
+    return NextResponse.json(
+      { error: "Error fetching project" },
+      { status: 500 },
+    );
   }
 }
 
@@ -48,7 +60,7 @@ export async function PUT(req: Request, { params }: Params) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -58,7 +70,10 @@ export async function PUT(req: Request, { params }: Params) {
     });
 
     if (!existingProject || existingProject.userId !== userId) {
-      return NextResponse.json({ error: 'Project not found or unauthorized' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Project not found or unauthorized" },
+        { status: 404 },
+      );
     }
 
     // Parse the request body for fields to update
@@ -76,8 +91,11 @@ export async function PUT(req: Request, { params }: Params) {
 
     return NextResponse.json(updatedProject, { status: 200 });
   } catch (error) {
-    console.error('Error updating project:', error);
-    return NextResponse.json({ error: 'Error updating project' }, { status: 500 });
+    console.error("Error updating project:", error);
+    return NextResponse.json(
+      { error: "Error updating project" },
+      { status: 500 },
+    );
   }
 }
 
@@ -89,7 +107,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -99,7 +117,10 @@ export async function DELETE(_req: Request, { params }: Params) {
     });
 
     if (!existingProject || existingProject.userId !== userId) {
-      return NextResponse.json({ error: 'Project not found or unauthorized' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Project not found or unauthorized" },
+        { status: 404 },
+      );
     }
 
     // Delete it
@@ -113,7 +134,10 @@ export async function DELETE(_req: Request, { params }: Params) {
       { status: 200 },
     );
   } catch (error) {
-    console.error('Error deleting project:', error);
-    return NextResponse.json({ error: 'Error deleting project' }, { status: 500 });
+    console.error("Error deleting project:", error);
+    return NextResponse.json(
+      { error: "Error deleting project" },
+      { status: 500 },
+    );
   }
 }

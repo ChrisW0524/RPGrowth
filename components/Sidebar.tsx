@@ -111,11 +111,11 @@ export default function Sidebar({
                     {area.projects.map((proj) => {
                       // If user is on this project
                       const isProjectActive = selectedProjectId === proj.id;
-                      const totalTasks = proj.containers.reduce(
+                      const totalTasks = (proj.containers ?? []).reduce(
                         (sum, c) => sum + c.items.length,
                         0
                       );
-                      const completedTasks = proj.containers.reduce(
+                      const completedTasks = (proj.containers ?? []).reduce(
                         (sum, c) =>
                           sum +
                           c.items.filter((task) => task.status === "Completed").length,
