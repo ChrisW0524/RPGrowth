@@ -98,6 +98,7 @@ export default function TaskBoard({
     );
     if (containerIndex === -1) return;
 
+
     const newTask: Task = {
       id: `task-${uuidv4()}`,
       title: taskTitle,
@@ -180,10 +181,19 @@ export default function TaskBoard({
 
     console.log(active, over);
 
+    if (!over) {
+      // reset
+      setActiveId(null);
+      return;
+    }
+
+    const activeType = getActiveType(active.id);
+    const overType = getActiveType(over.id);
+
     // Handle Items Sorting
     if (
-      active.id.toString().includes("task") &&
-      over?.id.toString().includes("task") &&
+      activeType === 'task' &&
+      overType === 'task' &&
       active &&
       over &&
       active.id !== over.id
@@ -238,8 +248,8 @@ export default function TaskBoard({
 
     // Handling Item Drop Into a Container
     if (
-      active.id.toString().includes("task") &&
-      over?.id.toString().includes("container") &&
+      activeType === 'task' &&
+      overType === 'container' &&
       active &&
       over &&
       active.id !== over.id
@@ -299,10 +309,13 @@ export default function TaskBoard({
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
+    const activeType = getActiveType(active.id)
+    const overType = getActiveType(over?.id)
+
     // Handling Container Sorting
     if (
-      active.id.toString().includes("container") &&
-      over?.id.toString().includes("container") &&
+      activeType === 'container' &&
+      overType === 'container' &&
       active &&
       over &&
       active.id !== over.id
@@ -327,8 +340,8 @@ export default function TaskBoard({
 
     // Handling item Sorting
     if (
-      active.id.toString().includes("task") &&
-      over?.id.toString().includes("task") &&
+      activeType === 'task' &&
+      overType === 'task' &&
       active &&
       over &&
       active.id !== over.id
@@ -380,8 +393,8 @@ export default function TaskBoard({
     }
     // Handling item dropping into Container
     if (
-      active.id.toString().includes("task") &&
-      over?.id.toString().includes("container") &&
+      activeType === 'task' &&
+      overType === 'container' &&
       active &&
       over &&
       active.id !== over.id
