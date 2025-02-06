@@ -28,7 +28,7 @@ import { Inter } from "next/font/google";
 // Components
 import KanbanContainer from "@/components/Kanban/KanbanContainer";
 import KanbanItem from "@/components/Kanban/KanbanItem";
-import Modal from "./Modal"; 
+import Modal from "./Modal";
 import Input from "./Input";
 import { Button } from "./Button";
 import { Task } from "@/types";
@@ -72,7 +72,7 @@ export default function TaskBoard({
   const [taskGold, setTaskGold] = useState<number>(0);
   const [taskDueDate, setTaskDueDate] = useState<string>(""); // will convert to dayjs
 
-  console.log(containers)
+  console.log(containers);
 
   const onAddContainer = () => {
     if (!containerName) return;
@@ -274,6 +274,26 @@ export default function TaskBoard({
       setContainers(newItems);
     }
   };
+
+  function getActiveType(id: UniqueIdentifier | undefined) {
+    if (!id) return null;
+
+    // Check if it's a container
+    if (containers.some((container) => container.id === id)) {
+      return "container";
+    }
+
+    // Check if it's a task
+    if (
+      containers.some((container) =>
+        container.tasks.some((task) => task.id === id),
+      )
+    ) {
+      return "task";
+    }
+
+    return null;
+  }
 
   // This is the function that handles the sorting of the containers and items when the user is done dragging.
   function handleDragEnd(event: DragEndEvent) {
@@ -520,11 +540,11 @@ export default function TaskBoard({
               </SortableContext>
               <DragOverlay adjustScale={false}>
                 {/* Drag Overlay For item Item */}
-                {activeId && activeId.toString().includes("task") && (
+                {activeId && getActiveType(activeId) === "task" && (
                   <KanbanItem id={activeId} {...findItem(activeId)} />
                 )}
                 {/* Drag Overlay For Container */}
-                {activeId && activeId.toString().includes("container") && (
+                {activeId && getActiveType(activeId) === "container" && (
                   <KanbanContainer
                     id={activeId}
                     title={findContainerName(activeId)}
@@ -570,20 +590,18 @@ export default function TaskBoard({
                 ))}
               </SortableContext>
               <DragOverlay adjustScale={false}>
-                {/* Drag Overlay For item Item */}
-                {activeId && activeId.toString().includes("task") && (
-                  <ListItem id={activeId} {...findItem(activeId)} />
+                {activeId && getActiveType(activeId) === "task" && (
+                  <KanbanItem id={activeId} {...findItem(activeId)} />
                 )}
-                {/* Drag Overlay For Container */}
-                {activeId && activeId.toString().includes("container") && (
-                  <ListContainer
+                {activeId && getActiveType(activeId) === "container" && (
+                  <KanbanContainer
                     id={activeId}
                     title={findContainerName(activeId)}
                   >
                     {findContainerItems(activeId).map((i) => (
-                      <ListItem {...i} key={i.id} />
+                      <KanbanItem {...i} key={i.id} />
                     ))}
-                  </ListContainer>
+                  </KanbanContainer>
                 )}
               </DragOverlay>
             </DndContext>
