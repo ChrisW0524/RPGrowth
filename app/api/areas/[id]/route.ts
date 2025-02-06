@@ -1,8 +1,8 @@
 // app/api/areas/[id]/route.ts
 
-import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import prisma from '@/prisma/prisma';
+import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import prisma from "@/prisma/prisma";
 
 interface RouteParams {
   params: { id: string };
@@ -16,7 +16,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -24,18 +24,21 @@ export async function GET(_req: Request, { params }: RouteParams) {
     const area = await prisma.area.findUnique({
       where: { id: params.id },
       // Optional: include relations
-      // include: { containers: true, projects: true, Task: true }
+      include: { containers: true, projects: true },
     });
 
     // Verify the area belongs to this user
     if (!area || area.userId !== userId) {
-      return NextResponse.json({ error: 'Area not found or unauthorized' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Area not found or unauthorized" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json(area, { status: 200 });
   } catch (error) {
-    console.error('Error fetching area:', error);
-    return NextResponse.json({ error: 'Error fetching area' }, { status: 500 });
+    console.error("Error fetching area:", error);
+    return NextResponse.json({ error: "Error fetching area" }, { status: 500 });
   }
 }
 
@@ -47,7 +50,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -57,7 +60,10 @@ export async function PUT(req: Request, { params }: RouteParams) {
     });
 
     if (!existingArea || existingArea.userId !== userId) {
-      return NextResponse.json({ error: 'Area not found or unauthorized' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Area not found or unauthorized" },
+        { status: 404 },
+      );
     }
 
     // Parse the request body for the new data
@@ -72,8 +78,8 @@ export async function PUT(req: Request, { params }: RouteParams) {
 
     return NextResponse.json(updatedArea, { status: 200 });
   } catch (error) {
-    console.error('Error updating area:', error);
-    return NextResponse.json({ error: 'Error updating area' }, { status: 500 });
+    console.error("Error updating area:", error);
+    return NextResponse.json({ error: "Error updating area" }, { status: 500 });
   }
 }
 
@@ -85,7 +91,7 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -95,7 +101,10 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
     });
 
     if (!existingArea || existingArea.userId !== userId) {
-      return NextResponse.json({ error: 'Area not found or unauthorized' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Area not found or unauthorized" },
+        { status: 404 },
+      );
     }
 
     // Remove the area
@@ -106,7 +115,7 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
     // Return 204 for successful deletion with no content
     return new Response(null, { status: 204 });
   } catch (error) {
-    console.error('Error deleting area:', error);
-    return NextResponse.json({ error: 'Error deleting area' }, { status: 500 });
+    console.error("Error deleting area:", error);
+    return NextResponse.json({ error: "Error deleting area" }, { status: 500 });
   }
 }

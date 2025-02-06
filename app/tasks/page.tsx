@@ -39,6 +39,7 @@ export default function Home() {
         setLoading(true);
         const data = await fetchWithAuth("/api/areas");
         setAreas(data);
+        console.log(data)
       } catch (err) {
         setError("Failed to load areas");
       } finally {
@@ -46,6 +47,7 @@ export default function Home() {
       }
     }
     fetchAreas();
+    
   }, []);
 
   // Build containers to display
